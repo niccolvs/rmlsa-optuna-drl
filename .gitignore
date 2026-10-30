@@ -1,0 +1,20 @@
+# Entornos
+.venv/
+__pycache__/
+*.egg-info/
+
+# DREAM-ON GYM clonado por scripts/setup.*
+external/
+
+# Salidas de experimentos (modelos, logs, estudios Optuna)
+results/*
+!results/.gitkeep
+*.zip
+*.db
+runs/
+tb_logs/
+
+# Notebooks / editores
+.ipynb_checkpoints/
+.vscode/
+.idea/
