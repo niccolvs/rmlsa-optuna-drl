@@ -30,23 +30,25 @@ los pida: ver [docs/instalacion.md](docs/instalacion.md).
 ```
 data/
   topologies/     NSFNet (14 nodos, 42 enlaces, 100 slots) y sus 3 rutas candidatas por par
-  bitrates/       10–1000 Gbps con BPSK/QPSK/8-QAM/16-QAM (slots y alcance, banda C)
+  bitrates/       10/40/100/400 Gbps con BPSK…64-QAM (slots y alcance, tablas de Flex Net Sim)
 src/rmlsa/
-  env.py          make_env(): entorno DREAM-ON GYM con tráfico Poisson/exponencial y semillas
-  heuristics.py   allocators: first_fit (ruta elegida por el agente) y spff
+  env.py          RMLSAEnv (Gymnasium): acción = ruta, modulación por alcance, espectro First-Fit
+  heuristics.py   allocators: first_fit (ruta del agente), spff, ksp_ff
 scripts/
-  setup.ps1/.sh   instalación
-  smoke_test.py   prueba de punta a punta
-docs/             notas (instalación, decisiones)
-notebooks/        análisis y gráficos
+  setup.ps1/.sh             instalación
+  smoke_test.py             prueba de punta a punta (~30 s)
+  baseline_heuristicas.py   bloqueo de SPFF y KSP-FF por carga y semilla (+ gráfico)
+  train_ppo.py              entrena PPO con hiperparámetros por defecto (+ TensorBoard)
+docs/             notas (instalación, escenario, decisiones)
+evidencias/       capturas y videos de los experimentos (versionado)
 results/          modelos, estudios Optuna y logs (no versionado)
 ```
 
 ## Plan de trabajo
 
 - [x] Entorno instalable y estructura del repositorio
-- [ ] Agente base: diseñar la observación (estado del espectro en las k rutas) y la terminación del episodio
-- [ ] Baseline SPFF y PPO por defecto bajo distintas cargas (Erlang) y semillas
+- [x] Escenario y agente base: observación (par, bitrate y estado del espectro en las k rutas), episodios de 1000 solicitudes
+- [ ] Baseline SPFF/KSP-FF y PPO por defecto bajo distintas cargas (Erlang) y semillas
 - [ ] Estudio Optuna (TPE + pruning) con almacenamiento SQLite y `optuna-dashboard`
 - [ ] Evaluación final con múltiples semillas e importancia de hiperparámetros
 

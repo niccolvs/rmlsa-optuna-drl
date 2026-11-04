@@ -31,7 +31,7 @@ DREAM-ON GYM es **Python puro** (incluye una reimplementación en Python de Flex
 2. **gymnasium ≥ 1.0 ya no reenvía atributos a través de wrappers.** Los ejemplos oficiales llaman
    `env.setRewardFunc(...)` sobre lo que devuelve `gymnasium.make`; hay que usar
    `gymnasium.make(...).unwrapped` (ya resuelto en `src/rmlsa/env.py`).
-3. **El entorno es un esqueleto.** Por defecto la observación es constante y cada paso termina el
+3. **El entorno es un esqueleto (resuelto con `RMLSAEnv`, ver docs/escenario.md).** Por defecto la observación es constante y cada paso termina el
    episodio (`terminated=True`). Para que PPO aprenda algo hay que definir:
    - `setStateFunc`: observación (p. ej. ocupación de slots / bloques libres en las k rutas) y el
      `observation_space` correspondiente.

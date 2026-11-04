@@ -12,11 +12,11 @@ Firma: (src, dst, b, c, n, path, action) -> (Controller.Status, Connection)
 from dreamongymv2.simNetPy import Controller
 
 
-def _path_length(route):
+def path_length(route):
     return sum(link.length for link in route)
 
 
-def _modulation_slots(b, length):
+def modulation_slots(b, length):
     """Slots de la modulación más eficiente cuyo alcance cubre la ruta.
 
     Se asume que el archivo de bitrates lista las modulaciones de menor a
@@ -29,33 +29,40 @@ def _modulation_slots(b, length):
     return None
 
 
-def _assign_first_fit(route, slots_needed, c, n):
-    """Busca el primer bloque contiguo libre en todos los enlaces de la ruta."""
+def used_slots(route, n):
+    """Slot s está ocupado en la ruta si lo está en cualquiera de sus enlaces."""
     total_slots = n.getLink(0).getSlots()
     used = [False] * total_slots
     for link in route:
         link = n.getLink(link.id)
         for s in range(total_slots):
             used[s] = used[s] or link.getSlot(s)
+    return used
 
+
+def first_fit_start(used, slots_needed):
+    """Índice del primer bloque contiguo libre de tamaño slots_needed, o None."""
     run, start = 0, 0
-    for s in range(total_slots):
-        if used[s]:
+    for s, busy in enumerate(used):
+        if busy:
             run, start = 0, s + 1
             continue
         run += 1
         if run == slots_needed:
-            for link in route:
-                c.addLink(link, fromSlot=start, toSlot=start + run)
-            return True
-    return False
+            return start
+    return None
 
 
 def _allocate_on_route(route, b, c, n):
-    slots = _modulation_slots(b, _path_length(route))
+    slots = modulation_slots(b, path_length(route))
     if slots is None:
         return False
-    return _assign_first_fit(route, slots, c, n)
+    start = first_fit_start(used_slots(route, n), slots)
+    if start is None:
+        return False
+    for link in route:
+        c.addLink(link, fromSlot=start, toSlot=start + slots)
+    return True
 
 
 def first_fit(src, dst, b, c, n, path, action):
@@ -74,4 +81,12 @@ def spff(src, dst, b, c, n, path, action):
     """
     if _allocate_on_route(path[src][dst][0], b, c, n):
         return Controller.Status.Allocated, c
+    return Controller.Status.Not_Allocated, c
+
+
+def ksp_ff(src, dst, b, c, n, path, action):
+    """K-Shortest-Paths First-Fit: prueba las k rutas en orden hasta que una cabe."""
+    for route in path[src][dst]:
+        if _allocate_on_route(route, b, c, n):
+            return Controller.Status.Allocated, c
     return Controller.Status.Not_Allocated, c
