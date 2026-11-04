@@ -21,7 +21,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback
 
 from rmlsa.env import RMLSAEnv, evaluate_model, run_heuristic
-from rmlsa.heuristics import ksp_ff, spff
+from rmlsa.heuristics import spff
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
 EVAL_SEED = 1000  # semilla de tráfico distinta a la de entrenamiento
@@ -64,7 +64,6 @@ def main():
         results = {
             "PPO": evaluate_model(model, args.load, EVAL_SEED, args.eval_requests),
             "SPFF": run_heuristic(spff, args.load, EVAL_SEED, args.eval_requests),
-            "KSP-FF": run_heuristic(ksp_ff, args.load, EVAL_SEED, args.eval_requests),
         }
     for name, bp in results.items():
         print(f"  {name:7s} bloqueo = {bp:.4f}")

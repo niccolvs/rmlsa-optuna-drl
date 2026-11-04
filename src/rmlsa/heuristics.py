@@ -82,11 +82,3 @@ def spff(src, dst, b, c, n, path, action):
     if _allocate_on_route(path[src][dst][0], b, c, n):
         return Controller.Status.Allocated, c
     return Controller.Status.Not_Allocated, c
-
-
-def ksp_ff(src, dst, b, c, n, path, action):
-    """K-Shortest-Paths First-Fit: prueba las k rutas en orden hasta que una cabe."""
-    for route in path[src][dst]:
-        if _allocate_on_route(route, b, c, n):
-            return Controller.Status.Allocated, c
-    return Controller.Status.Not_Allocated, c

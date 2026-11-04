@@ -27,15 +27,14 @@ ruta, lo que tapa el efecto del agente.
 
 ## Bloqueo de referencia (3000 solicitudes, semilla 0)
 
-| Carga [Erl] | SPFF   | KSP-FF |
-|-------------|--------|--------|
-| 50          | 0.0283 | 0.0137 |
-| 100         | 0.0843 | 0.0610 |
-| 200         | 0.1640 | 0.1380 |
-| 300         | 0.2120 | 0.1940 |
+| Carga [Erl] | SPFF   |
+|-------------|--------|
+| 50          | 0.0283 |
+| 100         | 0.0843 |
+| 200         | 0.1640 |
+| 300         | 0.2120 |
 
-KSP-FF mejora sobre SPFF, o sea que elegir bien la ruta sí importa: hay margen para el agente.
-Carga principal propuesta para entrenar: **100 Erlang**.
+Carga principal propuesta para entrenar: **100 Erlang** (SPFF bloquea ~8 %, hay margen para mejorar).
 
 ## Por qué no se usa `RlOnEnv` de DREAM-ON GYM
 
