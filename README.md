@@ -48,7 +48,7 @@ results/          modelos, estudios Optuna y logs (no versionado)
 
 - [x] Entorno instalable y estructura del repositorio
 - [x] Escenario y agente base: observación (par, bitrate y estado del espectro en las k rutas), episodios de 1000 solicitudes
-- [ ] Baseline SPFF y PPO por defecto bajo distintas cargas (Erlang) y semillas
+- [x] Baseline SPFF (4 cargas × 5 semillas) y PPO por defecto (ver `evidencias/`)
 - [ ] Estudio Optuna (TPE + pruning) con almacenamiento SQLite
 - [ ] Evaluación final con múltiples semillas e importancia de hiperparámetros
 
