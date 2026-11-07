@@ -7,15 +7,16 @@ comando continúa donde quedó.
 
 Uso:
     python scripts/optuna_ppo.py
-    python scripts/optuna_ppo.py --n-trials 30 --load 100
+    python scripts/optuna_ppo.py --n-trials 40 --load 100
 
-Al terminar guarda en results/optuna/: historial, importancia de hiperparámetros y trials.csv.
+Al terminar guarda en results/optuna/<study-name>/: historial, importancia de hiperparámetros y trials.csv.
 """
 
 import argparse
 import contextlib
 import io
 import time
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -66,15 +67,16 @@ def print_trial(study, trial):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--n-trials", type=int, default=30)
+    parser.add_argument("--n-trials", type=int, default=40)
     parser.add_argument("--load", type=float, default=100, help="carga en Erlang")
-    parser.add_argument("--timesteps", type=int, default=50_000, help="pasos de entrenamiento por trial")
+    parser.add_argument("--timesteps", type=int, default=100_000, help="pasos de entrenamiento por trial")
     parser.add_argument("--stages", type=int, default=5, help="evaluaciones intermedias (para la poda)")
-    parser.add_argument("--eval-requests", type=int, default=3000)
-    parser.add_argument("--study-name", default="ppo_rmlsa_100erl")
+    parser.add_argument("--eval-requests", type=int, default=10_000)
+    parser.add_argument("--study-name", default="ppo_rmlsa_100erl_v2")
     args = parser.parse_args()
 
     RESULTS.mkdir(exist_ok=True)
+    warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     study = optuna.create_study(
         study_name=args.study_name,
@@ -86,7 +88,7 @@ def main():
     )
     done = len(study.trials)
     print(f"Estudio '{args.study_name}': {done} trials previos, se harán {args.n_trials} más.")
-    print(f"Cada trial: {args.timesteps} pasos a {args.load} Erlang (~1.5 min si no se poda).\n")
+    print(f"Cada trial: {args.timesteps} pasos a {args.load} Erlang (~2.5 min si no se poda).\n")
 
     t0 = time.time()
     study.optimize(make_objective(args), n_trials=args.n_trials, callbacks=[print_trial])
@@ -98,8 +100,8 @@ def main():
     print(f"Mejor bloqueo: {study.best_value:.4f}")
     print(f"Mejores hiperparámetros: {study.best_params}")
 
-    out = RESULTS / "optuna"
-    out.mkdir(exist_ok=True)
+    out = RESULTS / "optuna" / args.study_name
+    out.mkdir(parents=True, exist_ok=True)
     study.trials_dataframe().to_csv(out / "trials.csv", index=False)
     optuna.visualization.matplotlib.plot_optimization_history(study)
     plt.savefig(out / "historial.png", dpi=150, bbox_inches="tight")
