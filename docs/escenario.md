@@ -19,7 +19,7 @@ ruta, lo que tapa el efecto del agente.
 ## Agente (MDP)
 
 - **Acción**: cuál de las 3 rutas usar. Modulación y espectro los resuelve la regla de arriba.
-- **Observación** (48 valores): origen y destino (one-hot), bitrate (one-hot) y, por ruta:
+- **Observación** (47 valores): origen y destino (one-hot), bitrate (one-hot) y, por ruta:
   saltos, slots requeridos, slots libres, posición del primer bloque que cabe, y si cabe o no.
 - **Recompensa**: +1 si la conexión se asigna, −1 si se bloquea.
 - **Episodio**: 1000 solicitudes; la red no se vacía entre episodios.
