@@ -50,7 +50,7 @@ results/          modelos, estudios Optuna y logs (no versionado)
 - [x] Escenario y agente base: observación (par, bitrate y estado del espectro en las k rutas), episodios de 1000 solicitudes
 - [x] Baseline SPFF (4 cargas × 5 semillas) y PPO por defecto (ver `evidencias/`)
 - [x] Estudio Optuna (TPE + pruning, SQLite): `scripts/optuna_ppo.py`, 30 trials (ver `evidencias/`)
-- [x] Estudio Optuna v2: 40 trials, 100 000 pasos, evaluación con 10 000 solicitudes
+- [ ] Estudio Optuna v2: 40 trials, 100 000 pasos, evaluación con 10 000 solicitudes
 - [ ] Evaluación final (`scripts/evaluar_final.py`): 3 entrenamientos × 4 cargas × 5 semillas de tráfico
 
 ## Créditos
