@@ -67,7 +67,7 @@ def print_trial(study, trial):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--n-trials", type=int, default=40)
+    parser.add_argument("--n-trials", type=int, default=40, help="total de trials del estudio")
     parser.add_argument("--load", type=float, default=100, help="carga en Erlang")
     parser.add_argument("--timesteps", type=int, default=100_000, help="pasos de entrenamiento por trial")
     parser.add_argument("--stages", type=int, default=5, help="evaluaciones intermedias (para la poda)")
@@ -86,12 +86,13 @@ def main():
         sampler=optuna.samplers.TPESampler(seed=0),
         pruner=optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=1),
     )
-    done = len(study.trials)
-    print(f"Estudio '{args.study_name}': {done} trials previos, se harán {args.n_trials} más.")
+    done = len([t for t in study.trials if t.state.is_finished()])
+    remaining = max(0, args.n_trials - done)
+    print(f"Estudio '{args.study_name}': {done} trials previos, se harán {remaining} más (total {args.n_trials}).")
     print(f"Cada trial: {args.timesteps} pasos a {args.load} Erlang (~2.5 min si no se poda).\n")
 
     t0 = time.time()
-    study.optimize(make_objective(args), n_trials=args.n_trials, callbacks=[print_trial])
+    study.optimize(make_objective(args), n_trials=remaining, callbacks=[print_trial])
     print(f"\nListo en {(time.time() - t0) / 60:.1f} min")
 
     states = [t.state for t in study.trials]
