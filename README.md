@@ -39,6 +39,8 @@ scripts/
   smoke_test.py             prueba de punta a punta (~30 s)
   baseline_spff.py          bloqueo de SPFF por carga y semilla (+ gráfico)
   train_ppo.py              entrena PPO con hiperparámetros por defecto (+ TensorBoard)
+  optuna_ppo.py             estudio Optuna (learning rate, gamma, batch size)
+  evaluar_final.py          PPO defecto vs PPO Optuna vs SPFF (cargas y semillas)
 docs/             notas (instalación, escenario, decisiones)
 evidencias/       capturas y videos de los experimentos (versionado)
 results/          modelos, estudios Optuna y logs (no versionado)
@@ -50,8 +52,8 @@ results/          modelos, estudios Optuna y logs (no versionado)
 - [x] Escenario y agente base: observación (par, bitrate y estado del espectro en las k rutas), episodios de 1000 solicitudes
 - [x] Baseline SPFF (4 cargas × 5 semillas) y PPO por defecto (ver `evidencias/`)
 - [x] Estudio Optuna (TPE + pruning, SQLite): `scripts/optuna_ppo.py`, 30 trials (ver `evidencias/`)
-- [ ] Estudio Optuna v2: 40 trials, 100 000 pasos, evaluación con 10 000 solicitudes
-- [ ] Evaluación final (`scripts/evaluar_final.py`): 3 entrenamientos × 4 cargas × 5 semillas de tráfico
+- [x] Estudio Optuna v2: 40 trials, 100 000 pasos, evaluación con 10 000 solicitudes (mejor: gamma 0.83, lr 4.1e-5, batch 256)
+- [x] Evaluación final (`scripts/evaluar_final.py`): 3 entrenamientos × 4 cargas × 5 semillas de tráfico; PPO Optuna bloquea 12–48 % menos que SPFF
 
 ## Créditos
 

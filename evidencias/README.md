@@ -60,3 +60,43 @@ por defecto y SPFF (varias semillas y cargas) corresponde al objetivo 4.
 | `02_optuna_historial.png`          | Bloqueo por trial y mejor valor acumulado     |
 | `03_optuna_importancia.png`        | Importancia de cada hiperparámetro            |
 | `04_optuna_trials.csv`             | Todos los trials (parámetros, estado, valor)  |
+
+## 2026-11-07 — Etapa 3: Optuna v2 y evaluación final (objetivos específicos 3, 4 y 5)
+
+**Optuna v2** (`scripts/optuna_ppo.py`, estudio `ppo_rmlsa_100erl_v2`): 40 trials, TPE (semilla 0) +
+MedianPruner, 100 000 pasos por trial en 5 etapas, 100 Erlang, bloqueo medido con 10 000 solicitudes
+(semilla de tráfico 1000). Duración: 41 min.
+
+| Resultado                  | Valor                                                     |
+|----------------------------|-----------------------------------------------------------|
+| Trials completos / podados | 26 / 14                                                   |
+| Mejor bloqueo (trial 37)   | 0.0726                                                    |
+| Mejores hiperparámetros    | learning_rate = 4.13e-5, gamma = 0.830, batch_size = 256  |
+| Importancia (PED-ANOVA)    | gamma 0.54, learning_rate 0.44, batch_size 0.02           |
+
+**Evaluación final** (`scripts/evaluar_final.py`): PPO por defecto y PPO con los hiperparámetros de
+Optuna, cada uno entrenado con 3 semillas (0, 1, 2) durante 300 000 pasos a 100 Erlang. Evaluados con
+10 000 solicitudes × 5 semillas de tráfico nuevas (2000–2004) por carga. Duración: 23.7 min.
+
+| Carga [Erlang] | SPFF            | PPO defecto     | PPO Optuna          | Mejora vs SPFF |
+|----------------|-----------------|-----------------|---------------------|----------------|
+| 50             | 0.0400 ± 0.0020 | 0.0281 ± 0.0036 | **0.0207 ± 0.0015** | 48.3 %         |
+| 100            | 0.1002 ± 0.0017 | 0.0895 ± 0.0048 | **0.0803 ± 0.0039** | 19.9 %         |
+| 150            | 0.1430 ± 0.0051 | 0.1335 ± 0.0043 | **0.1228 ± 0.0044** | 14.1 %         |
+| 200            | 0.1770 ± 0.0046 | 0.1665 ± 0.0056 | **0.1564 ± 0.0039** | 11.7 %         |
+
+(media ± desviación estándar sobre 5 semillas de tráfico; para los PPO, además, sobre 3 entrenamientos)
+
+El agente optimizado bloquea menos que los otros dos en todas las cargas, incluidas 50, 150 y 200
+Erlang, con las que no fue entrenado. Sus 3 entrenamientos dan resultados casi iguales (0.0797–0.0807
+a 100 Erlang), mientras que los del agente por defecto varían más (0.0859–0.0938).
+
+| Archivo                         | Contenido                                       |
+|---------------------------------|-------------------------------------------------|
+| `01_optuna_v2_historial.png`    | Bloqueo por trial y mejor valor acumulado       |
+| `02_optuna_v2_importancia.png`  | Importancia de cada hiperparámetro              |
+| `03_optuna_v2_trials.csv`       | Todos los trials (parámetros, estado, valor)    |
+| `04_final_bloqueo_vs_carga.png` | Bloqueo vs carga de los tres agentes            |
+| `05_final_terminal_tabla.png`   | Salida de evaluar_final.py                      |
+| `06_final_resumen.csv`          | Media y desviación por agente y carga           |
+| `07_final_resultados.csv`       | Cada evaluación (agente, semilla, carga)        |
