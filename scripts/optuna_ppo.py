@@ -142,7 +142,9 @@ def main():
         print(f"Gráficos en {out}")
         return
 
-    done = len([t for t in study.trials if t.state.is_finished()])
+    # solo cuentan los trials terminados de verdad: uno cortado con Ctrl + C queda como FAIL y se repite
+    done = len([t for t in study.trials
+                if t.state in (optuna.trial.TrialState.COMPLETE, optuna.trial.TrialState.PRUNED)])
     remaining = max(0, args.n_trials - done)
     print(f"Estudio '{args.study_name}': {done} trials previos, se harán {remaining} más (total {args.n_trials}).")
     print(f"Cada trial: {args.timesteps} pasos a {args.load} Erlang, medido con semillas {args.eval_seeds}.\n")
