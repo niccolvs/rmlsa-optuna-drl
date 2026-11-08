@@ -124,8 +124,7 @@ def occupancy_map(out, load):
         for n, (x, y) in POS.items():
             ax.scatter(x, y, s=260, color="#1d3557", zorder=3)
             ax.text(x, y, str(n), color="white", ha="center", va="center", fontsize=8, zorder=4)
-        ax.set_title(f"{name}
-ocupación media {np.mean(vals) * 100:.1f} %, máxima {max(vals) * 100:.0f} %")
+        ax.set_title(f"{name}\nocupación media {np.mean(vals) * 100:.1f} %, máxima {max(vals) * 100:.0f} %")
         ax.set_xlim(-0.3, 12.9)
         ax.set_ylim(1.7, 9.7)
         ax.axis("off")
