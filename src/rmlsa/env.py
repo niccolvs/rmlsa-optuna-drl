@@ -160,3 +160,44 @@ def evaluate_model(model, load, seed, n_requests):
         action, _ = model.predict(obs, deterministic=True)
         obs, _, _, _, info = env.step(action)
     return info["blocking_probability"]
+
+
+def evaluate_detailed(load, seed, n_requests, model=None, sample_every=100):
+    """Como evaluate_model (o SPFF si model es None), pero registrando cómo se usa la red.
+
+    Retorna un dict con:
+        bloqueo: probabilidad de bloqueo.
+        rutas: {k: veces que se eligió la ruta candidata k}.
+        bitrate: {Gbps: (solicitudes, bloqueadas)}.
+        distancia: {km de la ruta más corta del par: (solicitudes, bloqueadas)}.
+        enlaces: {id de enlace: fracción media de slots ocupados}, muestreada cada sample_every solicitudes.
+    """
+    from rmlsa.heuristics import spff
+
+    env = RMLSAEnv(load=load, seed=seed, episode_length=n_requests, allocator=first_fit if model else spff)
+    obs, info = env.reset()
+    network = env.sim.controller.network
+    n_links = network.getNumberOfLinks()
+    total_slots = network.getLink(0).getSlots()
+    rutas, bitrate, distancia = {}, {}, {}
+    occupancy = [0.0] * n_links
+    samples = 0
+    while "blocking_probability" not in info:
+        if env._steps % sample_every == 0:
+            for i in range(n_links):
+                link = network.getLink(i)
+                occupancy[i] += sum(link.getSlot(s) for s in range(total_slots)) / total_slots
+            samples += 1
+        src, dst, br = env._request
+        routes = env.sim.controller.path[src][dst]
+        action = 0 if model is None else int(model.predict(obs, deterministic=True)[0])
+        k = min(action, len(routes) - 1)
+        gbps = int(env.sim.bitRatesDefault[br].bitRate)
+        km = int(path_length(routes[0]))
+        obs, _, _, _, info = env.step(action)
+        blocked = 0 if info["allocated"] else 1
+        rutas[k] = rutas.get(k, 0) + 1
+        n, b = bitrate.get(gbps, (0, 0)); bitrate[gbps] = (n + 1, b + blocked)
+        n, b = distancia.get(km, (0, 0)); distancia[km] = (n + 1, b + blocked)
+    return {"bloqueo": info["blocking_probability"], "rutas": rutas, "bitrate": bitrate, "distancia": distancia,
+            "enlaces": {i: occupancy[i] / samples for i in range(n_links)}}
