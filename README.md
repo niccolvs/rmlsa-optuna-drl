@@ -40,7 +40,8 @@ scripts/
   baseline_spff.py          bloqueo de SPFF por carga y semilla (+ gráfico)
   train_ppo.py              entrena PPO con hiperparámetros por defecto (+ TensorBoard)
   optuna_ppo.py             estudio Optuna (learning rate, gamma, batch size)
-  evaluar_final.py          PPO defecto vs PPO Optuna vs SPFF (cargas y semillas)
+  evaluar_final.py          PPO defecto vs PPO Optuna vs SPFF (cargas y semillas, IC 95 %, uso de la red)
+  analisis_red.py           curvas de aprendizaje, rutas, bloqueo por velocidad/distancia, mapa de ocupación
 docs/             notas (instalación, escenario, decisiones)
 evidencias/       capturas y videos de los experimentos (versionado)
 results/          modelos, estudios Optuna y logs (no versionado)
@@ -54,6 +55,9 @@ results/          modelos, estudios Optuna y logs (no versionado)
 - [x] Estudio Optuna (TPE + pruning, SQLite): `scripts/optuna_ppo.py`, 30 trials (ver `evidencias/`)
 - [x] Estudio Optuna v2: 40 trials, 100 000 pasos, evaluación con 10 000 solicitudes (mejor: gamma 0.83, lr 4.1e-5, batch 256)
 - [x] Evaluación final (`scripts/evaluar_final.py`): 3 entrenamientos × 4 cargas × 5 semillas de tráfico; PPO Optuna bloquea 12–48 % menos que SPFF
+- [x] Estudio Optuna v3: 100 trials, 200 000 pasos, cada trial medido con 3 semillas de tráfico (mejor: gamma 0.836, lr 2.2e-5, batch 64)
+- [x] Evaluación ampliada: 3 entrenamientos × 10 cargas (25–250 Erlang) × 10 semillas, IC 95 %; PPO Optuna bloquea 10–78 % menos que SPFF y 5–39 % menos que PPO por defecto, en las 100 combinaciones carga × semilla
+- [x] Análisis de la red (`scripts/analisis_red.py`): rutas elegidas, bloqueo por velocidad y distancia, ocupación por enlace
 
 ## Créditos
 

@@ -49,7 +49,7 @@ def learning_curves(out):
         ax.fill_between(steps, arr.min(0), arr.max(0), color=COLORS[name], alpha=0.2)
     ax.set_xlabel("Pasos de entrenamiento (solicitudes)")
     ax.set_ylabel("Bloqueo por episodio (media móvil de 10)")
-    ax.set_title("Curvas de aprendizaje a 100 Erlang (banda = mínimo y máximo entre semillas)")
+    ax.set_title("Curvas de aprendizaje a 100 Erlang\n(banda = mínimo y máximo entre semillas)")
     ax.grid(alpha=0.3)
     ax.legend()
     fig.tight_layout()
@@ -129,7 +129,7 @@ def occupancy_map(out, load):
         ax.set_ylim(1.7, 9.7)
         ax.axis("off")
     fig.colorbar(lc, ax=axes, label="Fracción de slots ocupados", shrink=0.8)
-    fig.suptitle(f"Ocupación del espectro por enlace a {load:.0f} Erlang (disposición aproximada)")
+    fig.suptitle(f"Ocupación del espectro por enlace a {load:.0f} Erlang (disposición aproximada)", y=1.06)
     fig.savefig(out / "mapa_ocupacion.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     return occ
