@@ -151,7 +151,10 @@ def main():
 
     t0 = time.time()
     study.optimize(make_objective(args), n_trials=remaining, callbacks=[print_trial])
-    print(f"\nListo en {(time.time() - t0) / 60:.1f} min")
+    print(f"\nListo en {(time.time() - t0) / 60:.1f} min (esta sesión)")
+    total = sum((t.datetime_complete - t.datetime_start).total_seconds() for t in study.trials
+                if t.datetime_start and t.datetime_complete)
+    print(f"Tiempo de cómputo de todo el estudio (suma de trials, sin pausas): {total / 60:.1f} min")
 
     states = [t.state for t in study.trials]
     print(f"Completos: {states.count(optuna.trial.TrialState.COMPLETE)}  "
