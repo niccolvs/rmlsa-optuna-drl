@@ -42,6 +42,7 @@ scripts/
   optuna_ppo.py             estudio Optuna (learning rate, gamma, batch size)
   evaluar_final.py          PPO defecto vs PPO Optuna vs SPFF (cargas y semillas, IC 95 %, uso de la red)
   analisis_red.py           curvas de aprendizaje, rutas, bloqueo por velocidad/distancia, mapa de ocupación
+  maqueta_red.py            NSFNet en vivo (SPFF vs PPO): ventana interactiva o video MP4
 docs/             notas (instalación, escenario, decisiones)
 evidencias/       capturas y videos de los experimentos (versionado)
 results/          modelos, estudios Optuna y logs (no versionado)

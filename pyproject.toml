@@ -16,6 +16,7 @@ dependencies = [
     "jsonschema",
     "matplotlib",
     "tensorboard",
+    "imageio-ffmpeg",  # ffmpeg para el video de scripts/maqueta_red.py
 ]
 
 [build-system]
