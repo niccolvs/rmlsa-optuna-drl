@@ -158,3 +158,17 @@ porque acepta más conexiones y algunas van por rutas más largas.
 | `18_mapa_ocupacion.png`                   | NSFNet coloreada por ocupación de cada enlace           |
 | `19_resumen.csv`, `20`–`22_mejora_*.csv`  | Medias, IC 95 % y mejoras por carga                     |
 | `23_resultados.csv`                       | Cada evaluación (agente, entrenamiento, carga, semilla) |
+
+## Maqueta en vivo (2026-11-13)
+
+Carpeta: `2026-11-13_maqueta/`. Generada con `scripts/maqueta_red.py`: SPFF y PPO Optuna (modelo
+`optuna_s0` de la evaluación v3) atienden la misma secuencia de solicitudes (semilla 2000) en NSFNet.
+Gris: ocupación de cada enlace; rojo: solicitudes bloqueadas; celeste: aceptadas por una ruta alternativa.
+
+| Archivo                  | Contenido                                                                   |
+|--------------------------|-----------------------------------------------------------------------------|
+| `01_maqueta_150erl.mp4`  | Video de 33 s, 6 000 solicitudes a 150 Erlang. Final: SPFF 14.1 %, PPO Optuna 12.5 % |
+| `02_maqueta_cuadro.png`  | Un cuadro del video                                                         |
+
+La ventana interactiva (`python scripts/maqueta_red.py`) permite cambiar la carga (25–250 Erlang), la
+velocidad y el agente de la derecha (PPO Optuna o PPO por defecto).
