@@ -13,6 +13,7 @@ Uso:
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -23,9 +24,9 @@ from matplotlib.collections import LineCollection
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ["SPFF", "PPO defecto", "PPO Optuna"]
 COLORS = {"SPFF": "#1f77b4", "PPO defecto": "#ff7f0e", "PPO Optuna": "#2ca02c"}
-# Posiciones aproximadas de los nodos de NSFNet (solo para dibujar)
-POS = {0: (1, 9), 1: (0.4, 6.2), 2: (1.3, 3.4), 3: (3.2, 6.6), 4: (4.8, 5.6), 5: (6.2, 2.4), 6: (6.2, 6.6),
-       7: (7.7, 7.3), 8: (10.0, 6.4), 9: (9.2, 2.8), 10: (8.9, 8.7), 11: (11.4, 8.3), 12: (10.9, 7.4), 13: (12.2, 5.0)}
+# Nodos en sus ciudades reales y mapa de EE. UU. de fondo (mismo estilo que la maqueta)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from maqueta_red import POS, draw_usa  # noqa: E402
 
 
 def learning_curves(out):
@@ -110,7 +111,7 @@ def occupancy_map(out, load):
     d = pd.read_csv(out / "red_enlaces.csv")
     d = d[d["carga_erlang"] == load]
     occ = d.groupby(["agente", "clave"])["solicitudes"].mean()  # columna 'solicitudes' = ocupación media
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.6))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 3.6))
     vmax = occ.max()
     for ax, name in zip(axes, ["SPFF", "PPO Optuna"]):
         pair = {}
@@ -118,18 +119,17 @@ def occupancy_map(out, load):
             pair.setdefault((min(a, b), max(a, b)), []).append(occ[(name, lid)])
         segs = [[POS[a], POS[b]] for a, b in pair]
         vals = [np.mean(v) for v in pair.values()]
-        lc = LineCollection(segs, array=np.array(vals), cmap="RdYlGn_r", linewidths=6)
+        draw_usa(ax)
+        lc = LineCollection(segs, array=np.array(vals), cmap="RdYlGn_r", linewidths=5, zorder=1)
         lc.set_clim(0, vmax)
         ax.add_collection(lc)
         for n, (x, y) in POS.items():
-            ax.scatter(x, y, s=260, color="#1d3557", zorder=3)
-            ax.text(x, y, str(n), color="white", ha="center", va="center", fontsize=8, zorder=4)
+            ax.scatter(x, y, s=150, color="#1d3557", edgecolor="white", linewidth=0.8, zorder=3)
+            ax.text(x, y, str(n), color="white", ha="center", va="center", fontsize=6.5, zorder=4)
         ax.set_title(f"{name}\nocupación media {np.mean(vals) * 100:.1f} %, máxima {max(vals) * 100:.0f} %")
-        ax.set_xlim(-0.3, 12.9)
-        ax.set_ylim(1.7, 9.7)
         ax.axis("off")
     fig.colorbar(lc, ax=axes, label="Fracción de slots ocupados", shrink=0.8)
-    fig.suptitle(f"Ocupación del espectro por enlace a {load:.0f} Erlang (disposición aproximada)", y=1.06)
+    fig.suptitle(f"Ocupación del espectro por enlace a {load:.0f} Erlang (nodos en sus ciudades)", y=1.04)
     fig.savefig(out / "mapa_ocupacion.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     return occ
