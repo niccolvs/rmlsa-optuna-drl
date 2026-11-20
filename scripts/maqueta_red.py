@@ -24,9 +24,33 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 MODELS = ROOT / "results" / "models" / "final"
 COLORS = {"SPFF": "#1f77b4", "PPO Optuna": "#2ca02c", "PPO defecto": "#ff7f0e"}
-# Posiciones aproximadas de los nodos de NSFNet (las mismas de analisis_red.py)
-POS = {0: (1, 9), 1: (0.4, 6.2), 2: (1.3, 3.4), 3: (3.2, 6.6), 4: (4.8, 5.6), 5: (6.2, 2.4), 6: (6.2, 6.6),
-       7: (7.7, 7.3), 8: (10.0, 6.4), 9: (9.2, 2.8), 10: (8.9, 8.7), 11: (11.4, 8.3), 12: (10.9, 7.4), 13: (12.2, 5.0)}
+# Ciudades reales de NSFNet (los largos de los enlaces de la topología coinciden con estas distancias)
+CITIES = {0: ("Seattle", 47.61, -122.33), 1: ("Palo Alto", 37.44, -122.14), 2: ("San Diego", 32.72, -117.16),
+          3: ("Salt Lake City", 40.76, -111.89), 4: ("Boulder", 40.01, -105.27), 5: ("Houston", 29.76, -95.37),
+          6: ("Lincoln", 40.81, -96.70), 7: ("Champaign", 40.12, -88.24), 8: ("Pittsburgh", 40.44, -79.99),
+          9: ("Atlanta", 33.75, -84.39), 10: ("Ann Arbor", 42.28, -83.74), 11: ("Ithaca", 42.44, -76.50),
+          12: ("Princeton", 40.36, -74.66), 13: ("College Park", 38.99, -76.94)}
+KX = np.cos(np.radians(38))  # proyección simple: longitud escalada por el coseno de una latitud media
+POS = {n: (lon * KX, lat) for n, (_, lat, lon) in CITIES.items()}
+
+
+def draw_usa(ax):
+    """Estados de EE. UU. continental de fondo (data/mapas/us_states.json, datos del censo de EE. UU.)."""
+    from matplotlib.collections import PolyCollection
+
+    polys = []
+    for f in json.load(open(ROOT / "data" / "mapas" / "us_states.json"))["features"]:
+        if f["properties"]["name"] in ("Alaska", "Hawaii", "Puerto Rico"):
+            continue
+        g = f["geometry"]
+        rings = [g["coordinates"][0]] if g["type"] == "Polygon" else [p[0] for p in g["coordinates"]]
+        polys += [[(lon * KX, lat) for lon, lat in r] for r in rings]
+    ax.add_collection(PolyCollection(polys, facecolor="#e6eee1", edgecolor="white", linewidth=0.8, zorder=0))
+    ax.set_xlim(-125 * KX, -66 * KX)
+    ax.set_ylim(24.5, 49.8)
+    ax.set_aspect("equal")
+
+
 BLOCKED, DETOUR = "#d00000", "#00b4d8"
 
 
@@ -95,21 +119,20 @@ class Maqueta:
         segs = [[POS[a], POS[b]] for a, b in self.pairs]
 
         # ocupación en grises (más oscuro = más lleno) para que resalten los eventos en rojo y celeste
-        cmap = ListedColormap(plt.get_cmap("Greys")(np.linspace(0.15, 0.85, 256)))
+        cmap = ListedColormap(plt.get_cmap("Greys")(np.linspace(0.3, 0.9, 256)))
         self.axes, self.base, self.events = [], [], []
-        for x0 in (0.02, 0.48):
-            ax = fig.add_axes([x0, 0.37, 0.43, 0.50])
-            base = LineCollection(segs, cmap=cmap, linewidths=8, zorder=1)
+        for x0 in (0.01, 0.47):
+            ax = fig.add_axes([x0, 0.36, 0.45, 0.52])
+            draw_usa(ax)
+            base = LineCollection(segs, cmap=cmap, linewidths=6, zorder=1)
             base.set_array(np.zeros(len(segs)))
             base.set_clim(0, 0.6)
             ax.add_collection(base)
             ev = LineCollection([], linewidths=3.5, zorder=2, capstyle="round")
             ax.add_collection(ev)
             for n, (x, y) in POS.items():
-                ax.scatter(x, y, s=300, color="#1d3557", zorder=3)
-                ax.text(x, y, str(n), color="white", ha="center", va="center", fontsize=8, zorder=4)
-            ax.set_xlim(-0.3, 12.9)
-            ax.set_ylim(1.7, 9.7)
+                ax.scatter(x, y, s=170, color="#1d3557", edgecolor="white", linewidth=0.8, zorder=3)
+                ax.text(x, y, str(n), color="white", ha="center", va="center", fontsize=6.5, zorder=4)
             ax.axis("off")
             self.axes.append(ax)
             self.base.append(base)
