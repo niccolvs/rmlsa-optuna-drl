@@ -172,3 +172,64 @@ Gris: ocupación de cada enlace; rojo: solicitudes bloqueadas; celeste: aceptada
 
 La ventana interactiva (`python scripts/maqueta_red.py`) permite cambiar la carga (25–250 Erlang), la
 velocidad y el agente de la derecha (PPO Optuna o PPO por defecto).
+
+## 2026-11-20 — Estudio final de 300 trials
+
+Carpeta: `2026-11-20_300trials/`. Por sugerencia de la profesora, el estudio v3 (100 trials) se extendió
+a 300 trials: `ppo_rmlsa_100erl_v4` es una copia de v3 (`optuna_ppo.py --copiar-de ppo_rmlsa_100erl_v3`)
+a la que se le agregaron 200 trials con la misma configuración. v3 queda intacto. Después se repitió la
+evaluación final, el análisis de la red y la maqueta con los nuevos hiperparámetros.
+
+| Resultado                  | Valor                                                       |
+|----------------------------|-------------------------------------------------------------|
+| Trials                     | 300: 90 completos, 210 podados                              |
+| Tiempo de cómputo          | 487.1 min (suma de trials)                                  |
+| Mejor bloqueo              | 0.0753 (trial 210; con 100 trials era 0.0756, trial 30)     |
+| Mejores hiperparámetros    | learning_rate = 1.81e-5, gamma = 0.800, batch_size = 128    |
+| Importancia (PED-ANOVA)    | gamma 0.640, batch_size 0.202, learning_rate 0.158          |
+
+La búsqueda tres veces más larga mejoró el mejor trial en 0.0003 (menos que el ruido entre semillas) y
+en la misma zona: gamma ≈ 0.80–0.84, learning rate ≈ 2e-5. El mejor gamma quedó en el borde inferior del
+rango buscado (0.8).
+
+**Evaluación** (mismo protocolo que la etapa 4: 3 entrenamientos × 10 cargas × 10 semillas 2000–2009):
+
+| Carga [Erlang] | SPFF            | PPO defecto     | PPO Optuna          | Optuna vs SPFF | Optuna vs defecto |
+|----------------|-----------------|-----------------|---------------------|----------------|-------------------|
+| 25             | 0.0107 ± 0.0009 | 0.0038 ± 0.0005 | **0.0020 ± 0.0004** | 81.0 %         | 46.7 %            |
+| 50             | 0.0398 ± 0.0017 | 0.0279 ± 0.0009 | **0.0204 ± 0.0013** | 48.6 %         | 26.8 %            |
+| 75             | 0.0718 ± 0.0017 | 0.0606 ± 0.0016 | **0.0513 ± 0.0017** | 28.5 %         | 15.4 %            |
+| 100            | 0.0985 ± 0.0024 | 0.0891 ± 0.0019 | **0.0798 ± 0.0018** | 18.9 %         | 10.4 %            |
+| 125            | 0.1202 ± 0.0022 | 0.1126 ± 0.0018 | **0.1038 ± 0.0022** | 13.6 %         | 7.8 %             |
+| 150            | 0.1416 ± 0.0032 | 0.1328 ± 0.0018 | **0.1230 ± 0.0021** | 13.0 %         | 7.4 %             |
+| 175            | 0.1591 ± 0.0031 | 0.1498 ± 0.0027 | **0.1393 ± 0.0024** | 12.4 %         | 7.0 %             |
+| 200            | 0.1757 ± 0.0026 | 0.1662 ± 0.0026 | **0.1567 ± 0.0020** | 10.8 %         | 5.7 %             |
+| 225            | 0.1912 ± 0.0025 | 0.1812 ± 0.0023 | **0.1696 ± 0.0024** | 11.3 %         | 6.4 %             |
+| 250            | 0.2057 ± 0.0030 | 0.1955 ± 0.0021 | **0.1821 ± 0.0023** | 11.5 %         | 6.9 %             |
+
+(media ± IC 95 %; PPO Optuna bloquea menos que SPFF y que PPO defecto en las 10 semillas de cada carga.
+Los valores de SPFF y PPO defecto son los mismos de la etapa 4 porque usan las mismas semillas.)
+
+**Análisis de la red a 100 Erlang**: PPO Optuna se desvía de la ruta más corta 1.2 % de las veces a
+25 Erlang y 17.4 % a 250; PPO defecto ~30 % siempre. Bloqueo en 400 Gbps: SPFF 35.2 %, PPO Optuna 31.1 %;
+en pares > 3000 km: SPFF 19.2 %, PPO Optuna 15.9 %. El mapa de ocupación ahora dibuja la red sobre el
+mapa de EE. UU., con cada nodo en su ciudad.
+
+| Archivo                                   | Contenido                                               |
+|-------------------------------------------|---------------------------------------------------------|
+| `01_optuna_300_resumen.png`               | Resumen final de Optuna (300 trials)                    |
+| `02_evaluacion_tabla.png`                 | Tabla de bloqueo por carga                              |
+| `03_analisis_red_terminal.png`            | Rutas, bloqueo por velocidad y por distancia            |
+| `04`–`09_optuna_*.png`                    | Historial, importancia, slice, coordenadas paralelas, valores intermedios, gamma vs learning rate |
+| `10_optuna_trials.csv`                    | Los 300 trials                                          |
+| `11_bloqueo_vs_carga.png`                 | Bloqueo vs carga con IC 95 % (escala log)               |
+| `12_mejora_vs_carga.png`                  | Reducción relativa del bloqueo vs carga                 |
+| `13_curvas_aprendizaje.png`               | Bloqueo por episodio durante el entrenamiento           |
+| `14_uso_rutas.png`                        | % de solicitudes por ruta alternativa vs carga          |
+| `15_bloqueo_por_bitrate.png`              | Bloqueo por velocidad pedida                            |
+| `16_bloqueo_por_distancia.png`            | Bloqueo por largo de la ruta más corta del par          |
+| `17_mapa_ocupacion.png`                   | Ocupación de cada enlace sobre el mapa de EE. UU.       |
+| `18_resumen.csv`, `19`–`21_mejora_*.csv`  | Medias, IC 95 % y mejoras por carga                     |
+| `22_resultados.csv`                       | Cada evaluación (agente, entrenamiento, carga, semilla) |
+| `23_maqueta_150erl.mp4`                   | Maqueta en vivo con el modelo final, sobre el mapa de EE. UU. |
+| `24_maqueta_cuadro.png`                   | Un cuadro del video                                     |

@@ -59,6 +59,8 @@ results/          modelos, estudios Optuna y logs (no versionado)
 - [x] Estudio Optuna v3: 100 trials, 200 000 pasos, cada trial medido con 3 semillas de tráfico (mejor: gamma 0.836, lr 2.2e-5, batch 64)
 - [x] Evaluación ampliada: 3 entrenamientos × 10 cargas (25–250 Erlang) × 10 semillas, IC 95 %; PPO Optuna bloquea 10–78 % menos que SPFF y 5–39 % menos que PPO por defecto, en las 100 combinaciones carga × semilla
 - [x] Análisis de la red (`scripts/analisis_red.py`): rutas elegidas, bloqueo por velocidad y distancia, ocupación por enlace
+- [x] Maqueta en vivo (`scripts/maqueta_red.py`): SPFF vs PPO sobre el mapa de EE. UU., ventana interactiva o video
+- [x] Estudio final: v3 extendido a 300 trials (mejor: gamma 0.800, lr 1.8e-5, batch 128; bloqueo 0.0753) y evaluación repetida: PPO Optuna bloquea 11–81 % menos que SPFF y 6–47 % menos que PPO por defecto
 
 ## Créditos
 
