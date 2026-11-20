@@ -22,7 +22,7 @@ import matplotlib
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-MODELS = ROOT / "results" / "models" / "final" / "ppo_rmlsa_100erl_v3"
+MODELS = ROOT / "results" / "models" / "final"
 COLORS = {"SPFF": "#1f77b4", "PPO Optuna": "#2ca02c", "PPO defecto": "#ff7f0e"}
 # Posiciones aproximadas de los nodos de NSFNet (las mismas de analisis_red.py)
 POS = {0: (1, 9), 1: (0.4, 6.2), 2: (1.3, 3.4), 3: (3.2, 6.6), 4: (4.8, 5.6), 5: (6.2, 2.4), 6: (6.2, 6.6),
@@ -72,10 +72,10 @@ class Agente:
         return self.blocked / self.n if self.n else 0.0
 
 
-def load_models():
+def load_models(run):
     from stable_baselines3 import PPO
 
-    return {name: PPO.load(MODELS / f"{slug}_s0.zip") for name, slug in
+    return {name: PPO.load(MODELS / run / f"{slug}_s0.zip") for name, slug in
             [("PPO Optuna", "optuna"), ("PPO defecto", "defecto")]}
 
 
@@ -254,6 +254,7 @@ def main():
     parser.add_argument("--por-cuadro", type=int, default=15, help="solicitudes atendidas por cuadro")
     parser.add_argument("--agente", default="PPO Optuna", choices=["PPO Optuna", "PPO defecto"],
                         help="agente del panel derecho (en el video)")
+    parser.add_argument("--run", default="ppo_rmlsa_100erl_v4", help="carpeta de modelos en results/models/final")
     parser.add_argument("--video", help="si se indica, guarda un MP4 en esta ruta en vez de abrir la ventana")
     parser.add_argument("--solicitudes", type=int, default=6000, help="largo del video en solicitudes")
     parser.add_argument("--fps", type=int, default=12)
@@ -262,7 +263,10 @@ def main():
     if args.video:
         matplotlib.use("Agg")
     print("Cargando modelos...")
-    models = load_models()
+    if not (MODELS / args.run).exists():
+        print(f"No existe {args.run}, uso ppo_rmlsa_100erl_v3")
+        args.run = "ppo_rmlsa_100erl_v3"
+    models = load_models(args.run)
     (video if args.video else interactive)(args, models)
 
 

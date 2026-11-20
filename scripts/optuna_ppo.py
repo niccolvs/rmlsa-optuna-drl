@@ -123,14 +123,21 @@ def main():
     parser.add_argument("--study-name", default="ppo_rmlsa_100erl_v3")
     parser.add_argument("--solo-graficos", action="store_true",
                         help="no entrena: solo regenera los gráficos de un estudio ya hecho")
+    parser.add_argument("--copiar-de", help="si el estudio no existe, parte copiando los trials de este otro "
+                        "(para extender un estudio sin modificar el original)")
     args = parser.parse_args()
 
     RESULTS.mkdir(exist_ok=True)
     warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
+    storage = f"sqlite:///{RESULTS / 'optuna.db'}"
+    if args.copiar_de and args.study_name not in optuna.get_all_study_names(storage):
+        optuna.copy_study(from_study_name=args.copiar_de, from_storage=storage, to_storage=storage,
+                          to_study_name=args.study_name)
+        print(f"Estudio '{args.study_name}' creado como copia de '{args.copiar_de}'.")
     study = optuna.create_study(
         study_name=args.study_name,
-        storage=f"sqlite:///{RESULTS / 'optuna.db'}",
+        storage=storage,
         load_if_exists=True,
         direction="minimize",
         sampler=optuna.samplers.TPESampler(seed=0),
@@ -159,7 +166,7 @@ def main():
     states = [t.state for t in study.trials]
     print(f"Completos: {states.count(optuna.trial.TrialState.COMPLETE)}  "
           f"Podados: {states.count(optuna.trial.TrialState.PRUNED)}")
-    print(f"Mejor bloqueo: {study.best_value:.4f}")
+    print(f"Mejor bloqueo: {study.best_value:.4f} (trial {study.best_trial.number})")
     print(f"Mejores hiperparámetros: {study.best_params}")
     importances = optuna.importance.get_param_importances(study)
     print("Importancia de hiperparámetros:", {k: round(v, 3) for k, v in importances.items()})
