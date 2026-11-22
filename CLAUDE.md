@@ -121,7 +121,7 @@ Comandos útiles:
 
 ```powershell
 python scripts\maqueta_red.py                      # ventana interactiva (sliders de carga, velocidad, agente)
-python scripts\maqueta_red.py --video              # genera results\maqueta\maqueta_150erl_v4.mp4
+python scripts\maqueta_red.py --video results\maqueta\maqueta_150erl_v4.mp4 --carga 150   # video MP4
 pip install reportlab                              # una vez, solo para el informe
 python informe\informe_corto.py                    # -> informe\Informe_TEL317_Optuna_RMLSA.pdf
 python scripts\optuna_ppo.py --study-name ppo_rmlsa_100erl_v4 --solo-graficos   # regenerar gráficos Optuna
@@ -134,7 +134,7 @@ Cómo se corrió el estudio final (por si hay que repetirlo; ~10 h en total):
 python scripts\optuna_ppo.py --study-name ppo_rmlsa_100erl_v4 --copiar-de ppo_rmlsa_100erl_v3 --n-trials 300
 python scripts\evaluar_final.py --study-name ppo_rmlsa_100erl_v4
 python scripts\analisis_red.py --run ppo_rmlsa_100erl_v4
-python scripts\maqueta_red.py --video
+python scripts\maqueta_red.py --video results\maqueta\maqueta_150erl_v4.mp4 --carga 150
 ```
 
 Ojo: `evaluar_final.py`, `analisis_red.py` y `optuna_ppo.py` tienen v3 como valor por defecto: pasar
