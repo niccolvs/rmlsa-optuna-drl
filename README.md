@@ -25,6 +25,11 @@ python scripts\smoke_test.py                                  # SPFF + PPO + Opt
 No hace falta CUDA, TensorFlow, MPI ni Visual Studio Build Tools aunque el README de DREAM-ON GYM
 los pida: ver [docs/instalacion.md](docs/instalacion.md).
 
+## Estado y contexto
+
+Todo lo necesario para retomar el proyecto (estado, resultados finales, decisiones, pendientes y cómo
+seguir en otro PC) está en [CLAUDE.md](CLAUDE.md).
+
 ## Estructura
 
 ```
@@ -43,9 +48,11 @@ scripts/
   evaluar_final.py          PPO defecto vs PPO Optuna vs SPFF (cargas y semillas, IC 95 %, uso de la red)
   analisis_red.py           curvas de aprendizaje, rutas, bloqueo por velocidad/distancia, mapa de ocupación
   maqueta_red.py            NSFNet en vivo (SPFF vs PPO): ventana interactiva o video MP4
-docs/             notas (instalación, escenario, decisiones)
+docs/             notas (instalación, escenario) y guía de DREAM-ON GYM y Optuna
 evidencias/       capturas y videos de los experimentos (versionado)
-results/          modelos, estudios Optuna y logs (no versionado)
+informe/          informe de estudio en PDF y el script que lo genera
+entregas/         propuesta del Taller 4 (y la pauta final cuando llegue)
+results/          modelos, estudios Optuna y logs (solo se versiona el estudio final v4)
 ```
 
 ## Plan de trabajo

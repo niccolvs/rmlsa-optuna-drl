@@ -18,3 +18,19 @@ tb_logs/
 .ipynb_checkpoints/
 .vscode/
 .idea/
+
+# Excepción: copia del estudio final (300 trials) para retomar en otro PC sin re-entrenar (~10 h).
+# Base Optuna, gráficos y datos de la evaluación, y los 6 modelos finales (los usa la maqueta).
+!results/optuna.db
+!results/optuna/
+results/optuna/*
+!results/optuna/ppo_rmlsa_100erl_v4/
+!results/final/
+results/final/*
+!results/final/ppo_rmlsa_100erl_v4/
+!results/models/
+results/models/*
+!results/models/final/
+results/models/final/*
+!results/models/final/ppo_rmlsa_100erl_v4/
+!results/models/final/ppo_rmlsa_100erl_v4/*.zip
