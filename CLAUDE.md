@@ -13,14 +13,20 @@ Proyecto del ramo **TEL 317 (USM, 2026)**. Integrantes: Andrea Alfonzo, Nicolás
 - La propuesta original (Taller 4, formato IEEE) está en `entregas/Taller4/` (informe + presentación).
   Ahí están los 5 objetivos específicos. **Los 5 están cumplidos y tienen evidencia** (ver tabla abajo).
 
-## Estado al 22-11-2026
+## Estado al 24-11-2026  ⬅️ EMPEZAR AQUÍ
 
 - **Parte experimental: CERRADA.** No hace falta volver a entrenar nada.
-- **Presentación: miércoles 25-11-2026.**
-- **Pendiente: el informe final y la presentación.** ⚠️ **Hay que ESPERAR el formato/pauta oficial de la
-  profesora** para el informe y la presentación (todavía no lo entrega). No armar la versión definitiva
-  hasta tenerlo. Cuando llegue: guardarlo en `entregas/final/` y armar el informe y las diapositivas
-  según esa pauta, usando los números y figuras de abajo.
+- **Presentación: miércoles 25-11-2026** (10 min) + **informe formato IEEE**. La pauta ya llegó:
+  `entregas/final/Pauta_Taller_Final_2026.pdf`. Secciones: portada (proyecto, nombre del equipo, integrantes),
+  problema, objetivos, metodología, demostración, resultados, autocrítica y trabajo futuro.
+- **Todo el material para armarlos está en `entregas/final/GUION_presentacion_e_informe.md`**: plan de 12
+  diapositivas con tiempos, qué decir en cada una, todos los números, autocrítica, preguntas probables con
+  respuesta, referencias, estado del informe y qué imagen va en cada página.
+- **Informe (Overleaf)**: hecho hasta Metodología (`entregas/final/informe_avance_hasta_metodologia.tex.txt`).
+  Faltan IV Demostración, V Resultados, VI Autocrítica y trabajo futuro, VII Conclusiones. Forma de trabajo:
+  Claude crea cada sección en un .txt, lo abre en el Bloc de notas, Nicolás copia/pega en Overleaf y avisa;
+  se borra y se abre el siguiente. Estructura = la de la pauta del Taller Final, no la del Taller 5.
+- **Pendiente decidir**: nombre del equipo para la portada; demo con video (recomendado) o ventana interactiva.
 - Mientras tanto existe un **informe de estudio** (no es la entrega): `informe/Informe_TEL317_Optuna_RMLSA.pdf`
   (17 págs.). Explica todo para que el grupo entienda y pueda defender el trabajo: qué es RL/PPO,
   DREAM-ON GYM, Optuna (TPE, poda), escenario, semillas, resultados, limitaciones y 12 preguntas
@@ -175,9 +181,8 @@ siempre el nombre del estudio v4.
 
 ## Próximos pasos
 
-1. Esperar la pauta oficial del informe final y de la presentación (guardarla en `entregas/final/`).
-2. Armar la presentación del 25-11: problema → escenario → Optuna → resultados (bloqueo vs carga, mejora,
-   importancia, uso de rutas, mapa de ocupación) → maqueta en video → limitaciones y trabajo futuro.
-   Figuras listas en `evidencias/2026-11-20_300trials/`; video `23_maqueta_150erl.mp4`.
-3. Redactar el informe final con el formato que pidan (la propuesta usó plantilla IEEE), reutilizando
-   textos y figuras del informe de estudio.
+1. Terminar el informe IEEE: IV Demostración, V Resultados, VI Autocrítica y trabajo futuro, VII Conclusiones
+   (contenido y números en `entregas/final/GUION_presentacion_e_informe.md`).
+2. Armar la presentación del 25-11 (12 páginas, imágenes indicadas en el guion; video
+   `evidencias/2026-11-20_300trials/23_maqueta_150erl.mp4`).
+3. Definir nombre del equipo para la portada.
