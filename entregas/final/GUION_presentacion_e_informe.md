@@ -216,7 +216,7 @@ allocation in optical networks: Hype or hope?" J. Opt. Commun. Netw., vol. 17, p
   VI Autocrítica y trabajo futuro · VII Conclusiones. (Se eliminaron "Estado del arte" y "Resultados esperados";
   lo importante del estado del arte quedó en el 3er párrafo de la Sección I.)
 - LISTO y pegado: título, autores, resumen, keywords, I, II, III (texto completo en
-  `informe_avance_hasta_metodologia.tex.txt`, desde \begin{abstract} hasta el fin de Metodología).
+  `borradores/informe_avance_hasta_metodologia.tex.txt`, desde \begin{abstract} hasta el fin de Metodología).
 - Bib: claves existentes gerstel, christodoulopoulos, deeprmsa, dreamongym, doherty2025hype, optuna; agregadas
   sb3, ppo, tpe (las 3 entradas están al final del .tex.txt, van en references.bib).
 - Tablas ya usadas: tab:escenario, tab:espacio.

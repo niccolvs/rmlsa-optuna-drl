@@ -51,7 +51,7 @@ scripts/
 docs/             notas (instalación, escenario) y guía de DREAM-ON GYM y Optuna
 evidencias/       capturas y videos de los experimentos (versionado)
 informe/          informe de estudio en PDF y el script que lo genera
-entregas/         propuesta del Taller 4 (y la pauta final cuando llegue)
+entregas/         propuesta del Taller 4 y entrega final (informe IEEE, presentación y guía de estudio)
 results/          modelos, estudios Optuna y logs (solo se versiona el estudio final v4)
 ```
 
@@ -68,6 +68,7 @@ results/          modelos, estudios Optuna y logs (solo se versiona el estudio f
 - [x] Análisis de la red (`scripts/analisis_red.py`): rutas elegidas, bloqueo por velocidad y distancia, ocupación por enlace
 - [x] Maqueta en vivo (`scripts/maqueta_red.py`): SPFF vs PPO sobre el mapa de EE. UU., ventana interactiva o video
 - [x] Estudio final: v3 extendido a 300 trials (mejor: gamma 0.800, lr 1.8e-5, batch 128; bloqueo 0.0753) y evaluación repetida: PPO Optuna bloquea 11–81 % menos que SPFF y 6–47 % menos que PPO por defecto
+- [x] Entrega final (25-11-2026): informe IEEE y presentación en [`entregas/final/`](entregas/final/README.md)
 
 ## Créditos
 

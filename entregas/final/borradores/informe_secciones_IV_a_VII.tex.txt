@@ -1,0 +1,213 @@
+% =====================================================================================
+% PEGAR DESPUÉS del párrafo de "\subsection{Protocolo de evaluación}"
+% y ANTES de "\bibliographystyle{IEEEtran}".
+%
+% IMÁGENES: súbelas a la raíz del proyecto de Overleaf (Upload) con estos nombres exactos.
+% Ya están copiadas con esos nombres en  entregas/final/figuras_informe/
+%   maqueta.png        <- evidencias/2026-11-20_300trials/24_maqueta_cuadro.png
+%   gamma_lr.png       <- evidencias/2026-11-20_300trials/09_optuna_gamma_vs_learning_rate.png
+%   bloqueo_carga.png  <- evidencias/2026-11-20_300trials/11_bloqueo_vs_carga.png
+%   curvas.png         <- evidencias/2026-11-20_300trials/13_curvas_aprendizaje.png
+%   uso_rutas.png      <- evidencias/2026-11-20_300trials/14_uso_rutas.png
+%   nsfnet.png         <- informe/fig/nsfnet.png   (solo si usas el bloque OPCIONAL del final)
+%
+% Las líneas que empiezan con % son comentarios: no aparecen en el PDF, puedes dejarlas o borrarlas.
+% =====================================================================================
+
+\section{Demostración}
+
+Para observar el comportamiento de los agentes sobre la red se desarrolló una maqueta que simula NSFNet en vivo y atiende la misma secuencia de solicitudes con SPFF y con el agente optimizado, uno al lado del otro (Fig.~\ref{fig:maqueta}). Cada enlace se colorea según la fracción de \textit{slots} ocupados; las solicitudes bloqueadas se marcan en rojo y las que el agente acepta por una ruta distinta de la más corta, en celeste. En la parte inferior se grafica el bloqueo acumulado de ambos.
+
+En la corrida mostrada, a 150~Erlang y con tráfico de evaluación (semilla 2000), tras 5430 solicitudes SPFF había bloqueado 771 (14{,}20\%) y el agente optimizado 711 (13{,}09\%): 60 bloqueos menos (7{,}8\%), tras desviarse de la ruta más corta en 212 ocasiones. Ambas políticas usan la misma modulación y el mismo First-Fit, por lo que la diferencia se debe solo a la ruta elegida: mientras SPFF satura el corredor central de la red, el agente acepta conexiones por rutas alternativas, como la del sur (nodos 1--2--5--13). La maqueta es ilustrativa, pues usa un solo agente y una sola semilla; las cifras oficiales son las de la Sección~V.
+
+% ---- FIGURA: maqueta.png (ocupa las dos columnas; LaTeX la pone arriba de una página) ----
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{maqueta.png}
+\caption{Maqueta de NSFNet a 150~Erlang con la misma secuencia de solicitudes para SPFF (izquierda) y el agente PPO optimizado (derecha). Gris: ocupación de cada enlace; rojo: solicitud bloqueada; celeste: solicitud aceptada por una ruta alternativa. Abajo: bloqueo acumulado de ambos.}
+\label{fig:maqueta}
+\end{figure*}
+
+\section{Resultados}
+
+\subsection{Optimización con Optuna}
+
+De los 300 \textit{trials}, 90 se completaron, 210 fueron podados por el \textit{MedianPruner} y uno falló. El estudio tomó 487 minutos de cómputo en CPU. Como un \textit{trial} completo dura en promedio 2{,}7 minutos, sin poda habría tomado cerca de 13{,}7 horas, por lo que la poda ahorró unas 5{,}6 horas (41\%).
+
+La Fig.~\ref{fig:gammalr} muestra todos los \textit{trials} en el plano del factor de descuento y la tasa de aprendizaje. Tras los 10 \textit{trials} aleatorios iniciales, TPE concentró la búsqueda en la región que daba mejores resultados: de los 291 \textit{trials} siguientes, 283 usaron una tasa de aprendizaje menor a $2\times10^{-4}$ y 289 un $\gamma$ menor a 0{,}9. Los cinco mejores \textit{trials} (Tabla~\ref{tab:top}) comparten la misma receta: $\gamma$ entre 0{,}80 y 0{,}84 y una tasa de aprendizaje entre $2\times10^{-5}$ y $10^{-4}$, muy por debajo de los valores por defecto. El mejor fue el \textit{trial} 210, con un bloqueo de 0{,}0753. Con los primeros 100 \textit{trials}, el mejor había sido el 30 (0{,}0756): triplicar la búsqueda mejoró el resultado en solo 0{,}0003, menos que la variación entre semillas, y en la misma zona del espacio, lo que indica que el óptimo encontrado es robusto.
+
+% ---- FIGURA: gamma_lr.png (una columna) ----
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{gamma_lr.png}
+\caption{\textit{Trials} del estudio de Optuna según $\gamma$ y la tasa de aprendizaje. Los círculos son \textit{trials} completos (color: probabilidad de bloqueo) y las cruces, \textit{trials} podados. El mejor (\textit{trial} 210) está marcado en rojo.}
+\label{fig:gammalr}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Mejores \textit{trials} del estudio}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{\textit{Trial}} & $\boldsymbol{\gamma}$ & \textbf{Tasa de apr.} & \textbf{Lote} & \textbf{Bloqueo} \\
+\hline
+210 & 0{,}800 & $1{,}8\times10^{-5}$ & 128 & 0{,}0753 \\
+148 & 0{,}827 & $5{,}8\times10^{-5}$ & 512 & 0{,}0755 \\
+290 & 0{,}829 & $1{,}1\times10^{-4}$ & 512 & 0{,}0755 \\
+30  & 0{,}836 & $2{,}2\times10^{-5}$ & 64  & 0{,}0756 \\
+208 & 0{,}804 & $1{,}9\times10^{-5}$ & 128 & 0{,}0757 \\
+\hline
+Defecto & 0{,}99 & $3\times10^{-4}$ & 64 & -- \\
+\hline
+\end{tabular}
+\label{tab:top}
+\end{center}
+\end{table}
+
+Según el análisis PED-ANOVA~\cite{pedanova}, el factor de descuento fue el hiperparámetro más influyente (importancia 0{,}64), seguido del tamaño de lote (0{,}20) y de la tasa de aprendizaje (0{,}16). Este orden debe leerse con cuidado: con los primeros 100 \textit{trials}, la tasa de aprendizaje aparecía como la más influyente (0{,}72), porque la importancia se calcula dentro de la región explorada y TPE la va estrechando. Lo que se mantuvo estable entre estudios es la ubicación de las buenas configuraciones. El valor de $\gamma$ tiene una interpretación directa: el horizonte efectivo del agente es de aproximadamente $1/(1-\gamma)$ solicitudes, es decir, unas 100 con el valor por defecto (0{,}99) y unas 5 con el óptimo (0{,}80). Como las solicitudes llegan de forma aleatoria, el efecto de una decisión de ruteo se diluye pronto, y considerar un horizonte largo agrega ruido a la estimación del valor de cada acción.
+
+\subsection{Probabilidad de bloqueo}
+
+La Tabla~\ref{tab:bloqueo} y la Fig.~\ref{fig:bloqueo} resumen la evaluación final con tráfico nuevo. El agente optimizado obtuvo el menor bloqueo en las 10 cargas, y sus intervalos de confianza no se traslapan con los de los otros dos métodos en ninguna de ellas. En la comparación pareada, superó a SPFF y al agente por defecto en las 10 semillas de cada carga, es decir, en los 100 casos evaluados. A la carga de entrenamiento (100~Erlang), la reducción fue de $18{,}9 \pm 1{,}8\%$ respecto de SPFF y de $10{,}4 \pm 1{,}2\%$ respecto del agente por defecto. Aunque se entrenó solo a 100~Erlang, la mejora se mantuvo en todas las cargas.
+
+La reducción relativa disminuye con la carga, de 81\% a 25~Erlang a 11\% a 250~Erlang, ya que con la red saturada ninguna de las rutas candidatas tiene espacio y elegir bien la ruta aporta menos. El agente por defecto también superó a SPFF en todas las cargas (entre 5\% y 65\%), lo que confirma que el aprendizaje por refuerzo aporta por sí mismo; la optimización con Optuna agrega una mejora adicional sobre esa base.
+
+\begin{table}[htbp]
+\caption{Probabilidad de bloqueo (media $\pm$ IC 95\%, 10 semillas) y reducción del agente optimizado}
+\begin{center}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+\textbf{Carga} & \textbf{SPFF} & \textbf{PPO defecto} & \textbf{PPO Optuna} & \textbf{vs SPFF} & \textbf{vs defecto} \\
+\textbf{[Erl]} & & & & \textbf{[\%]} & \textbf{[\%]} \\
+\hline
+25  & $0{,}0107 \pm 0{,}0009$ & $0{,}0038 \pm 0{,}0005$ & $\mathbf{0{,}0020 \pm 0{,}0004}$ & 81{,}0 & 46{,}7 \\
+50  & $0{,}0398 \pm 0{,}0017$ & $0{,}0279 \pm 0{,}0009$ & $\mathbf{0{,}0204 \pm 0{,}0013}$ & 48{,}6 & 26{,}8 \\
+75  & $0{,}0718 \pm 0{,}0017$ & $0{,}0606 \pm 0{,}0016$ & $\mathbf{0{,}0513 \pm 0{,}0017}$ & 28{,}5 & 15{,}4 \\
+100 & $0{,}0985 \pm 0{,}0024$ & $0{,}0891 \pm 0{,}0019$ & $\mathbf{0{,}0798 \pm 0{,}0018}$ & 18{,}9 & 10{,}4 \\
+125 & $0{,}1202 \pm 0{,}0022$ & $0{,}1126 \pm 0{,}0018$ & $\mathbf{0{,}1038 \pm 0{,}0022}$ & 13{,}6 & 7{,}8 \\
+150 & $0{,}1416 \pm 0{,}0032$ & $0{,}1328 \pm 0{,}0018$ & $\mathbf{0{,}1230 \pm 0{,}0021}$ & 13{,}0 & 7{,}4 \\
+175 & $0{,}1591 \pm 0{,}0031$ & $0{,}1498 \pm 0{,}0027$ & $\mathbf{0{,}1393 \pm 0{,}0024}$ & 12{,}4 & 7{,}0 \\
+200 & $0{,}1757 \pm 0{,}0026$ & $0{,}1662 \pm 0{,}0026$ & $\mathbf{0{,}1567 \pm 0{,}0020}$ & 10{,}8 & 5{,}7 \\
+225 & $0{,}1912 \pm 0{,}0025$ & $0{,}1812 \pm 0{,}0023$ & $\mathbf{0{,}1696 \pm 0{,}0024}$ & 11{,}3 & 6{,}4 \\
+250 & $0{,}2057 \pm 0{,}0030$ & $0{,}1955 \pm 0{,}0021$ & $\mathbf{0{,}1821 \pm 0{,}0023}$ & 11{,}5 & 6{,}9 \\
+\hline
+\end{tabular}%
+}
+\label{tab:bloqueo}
+\end{center}
+\end{table}
+
+% ---- FIGURA: bloqueo_carga.png (una columna) ----
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{bloqueo_carga.png}
+\caption{Probabilidad de bloqueo según la carga (escala logarítmica), con intervalos de confianza del 95\%. Cada punto promedia 3 entrenamientos y 10 semillas de tráfico no vistas durante la optimización.}
+\label{fig:bloqueo}
+\end{figure}
+
+La optimización también hizo el entrenamiento más estable. A 100~Erlang, los tres agentes optimizados obtuvieron bloqueos medios entre 0{,}0785 y 0{,}0811, mientras que los tres por defecto variaron entre 0{,}0849 y 0{,}0935, una dispersión unas tres veces mayor; además, el peor agente optimizado superó al mejor agente por defecto en 89 de los 100 casos. Las curvas de aprendizaje (Fig.~\ref{fig:curvas}) muestran que ambas configuraciones se estabilizan antes de los 150\,000 pasos, y que el agente optimizado converge a un bloqueo menor y con menos variación entre semillas. Por último, el bloqueo del mejor \textit{trial} en Optuna (0{,}0753) es algo menor que el de la evaluación final a la misma carga (0{,}0798), pues el primero corresponde al mejor de 300 intentos medidos con las mismas semillas usadas para elegirlo; la cifra representativa es la de la evaluación con tráfico nuevo.
+
+% ---- FIGURA: curvas.png (una columna) ----
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{curvas.png}
+\caption{Curvas de aprendizaje a 100~Erlang: bloqueo por episodio (media móvil de 10) de los agentes por defecto y optimizado. La línea es la media de 3 entrenamientos y la banda, el mínimo y el máximo entre ellos.}
+\label{fig:curvas}
+\end{figure}
+
+\subsection{Comportamiento sobre la red}
+
+Para entender por qué el agente optimizado bloquea menos, se analizó qué rutas elige cada método. SPFF nunca se desvía de la ruta más corta. El agente por defecto lo hace en cerca del 30\% de las solicitudes, sin importar la carga, por lo que gasta espectro en rutas largas incluso cuando no es necesario. El agente optimizado, en cambio, aprendió \emph{cuándo} desviarse: lo hace en el 1{,}2\% de las solicitudes a 25~Erlang, en el 9{,}6\% a 100~Erlang y en el 17{,}4\% a 250~Erlang (Fig.~\ref{fig:rutas}). Este comportamiento no fue programado; surge del entrenamiento con los hiperparámetros encontrados por Optuna.
+
+% ---- FIGURA: uso_rutas.png (una columna) ----
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{uso_rutas.png}
+\caption{Porcentaje de solicitudes asignadas por una ruta distinta de la más corta, según la carga.}
+\label{fig:rutas}
+\end{figure}
+
+La Tabla~\ref{tab:red} desglosa el bloqueo a 100~Erlang. Casi todo el bloqueo corresponde a conexiones de 400~Gbps, que requieren bloques de hasta 32 \textit{slots} contiguos, y a pares de nodos lejanos, donde la modulación es menos eficiente. Es en estos grupos donde el agente optimizado más mejora: en los pares de más de 3000~km, reduce el bloqueo de 0{,}192 a 0{,}159. En los pares de menos de 1000~km, en cambio, el agente por defecto bloquea algo menos, aunque en todos los casos se trata de valores muy bajos. Además, la ocupación media del espectro fue de 27{,}3\% con SPFF, 31{,}8\% con el agente por defecto y 31{,}3\% con el optimizado: los agentes aceptan más conexiones y reparten la carga por rutas alternativas en vez de saturar las más cortas.
+
+\begin{table}[htbp]
+\caption{Probabilidad de bloqueo a 100~Erlang por velocidad y por largo de la ruta más corta del par}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Grupo} & \textbf{SPFF} & \textbf{PPO defecto} & \textbf{PPO Optuna} \\
+\hline
+10 Gbps  & 0{,}0003 & 0{,}0017 & \textbf{0{,}0000} \\
+40 Gbps  & 0{,}0065 & 0{,}0008 & \textbf{0{,}0006} \\
+100 Gbps & 0{,}0356 & 0{,}0085 & \textbf{0{,}0077} \\
+400 Gbps & 0{,}3515 & 0{,}3456 & \textbf{0{,}3112} \\
+\hline
+$<$ 1000 km    & 0{,}0051 & \textbf{0{,}0030} & 0{,}0036 \\
+1000--2000 km  & 0{,}0473 & 0{,}0467 & \textbf{0{,}0445} \\
+2000--3000 km  & 0{,}1047 & 0{,}0881 & \textbf{0{,}0766} \\
+$>$ 3000 km    & 0{,}1919 & 0{,}1782 & \textbf{0{,}1592} \\
+\hline
+\end{tabular}
+\label{tab:red}
+\end{center}
+\end{table}
+
+\section{Autocrítica y trabajo futuro}
+
+\subsection{Autocrítica}
+
+\begin{itemize}
+    \item El mejor $\gamma$ (0{,}800) quedó en el borde inferior del rango buscado, por lo que el rango fue demasiado estrecho y no se sabe si valores menores serían aún mejores.
+    \item Se estudió un solo escenario: la topología NSFNet, con entrenamiento a una sola carga (100~Erlang). Se comprobó que el agente generaliza a otras cargas, pero no a otras topologías.
+    \item El agente solo elige la ruta entre tres candidatas; la modulación y el espectro siguen reglas fijas. Por eso no resuelve la fragmentación: las conexiones de 400~Gbps se siguen bloqueando en cerca del 31\% de los casos.
+    \item Solo se optimizaron tres hiperparámetros; otros, como la cantidad de pasos por actualización, el recorte de PPO, el coeficiente de entropía o el tamaño de las redes, quedaron en sus valores por defecto.
+    \item La única referencia heurística fue SPFF, la planteada en la propuesta. Doherty \textit{et al.}~\cite{doherty2025hype} recomiendan comparar también con heurísticas más fuertes, como KSP-FF con más rutas candidatas, lo que no se hizo.
+    \item Los dos primeros estudios (30 y 40 \textit{trials}) midieron cada \textit{trial} con una sola semilla de tráfico, y sus conclusiones se contradecían (el primero favorecía un $\gamma$ cercano a 0{,}99). Medir con tres semillas lo corrigió, pero costó tiempo de cómputo.
+    \item El entorno Gymnasium es propio, porque el de DREAM-ON GYM no funcionaba. Aunque usa el simulador, la topología y las rutas del \textit{framework}, los resultados no pudieron contrastarse con su entorno oficial.
+    \item La importancia de los hiperparámetros es relativa a la región explorada, y todos los resultados provienen de simulación.
+\end{itemize}
+
+\subsection{Trabajo futuro}
+
+\begin{itemize}
+    \item Ampliar el rango de $\gamma$ por debajo de 0{,}8 e incluir más hiperparámetros de PPO y de la arquitectura de la red neuronal.
+    \item Evaluar otras topologías, como COST239 o USNet, y entrenar con varias cargas de tráfico.
+    \item Extender la acción del agente a la elección de la modulación y del espectro, aumentar el número de rutas candidatas y comparar con heurísticas más fuertes, como KSP-FF.
+    \item Aplicar el mismo esquema a redes con distribución cuántica de claves (QKD), donde canales clásicos y cuánticos comparten la fibra y agregan restricciones de asignación.
+    \item Integrar el agente como herramienta de un orquestador multiagente basado en modelos de lenguaje, que reciba instrucciones en lenguaje natural.
+\end{itemize}
+
+\section{Conclusiones}
+
+Se optimizaron con Optuna los hiperparámetros de un agente PPO que resuelve el problema RMLSA dinámico en NSFNet, cumpliendo los cinco objetivos específicos planteados. Con 300 \textit{trials}, muestreo TPE y poda por mediana, Optuna encontró una configuración ($\gamma = 0{,}80$, tasa de aprendizaje $1{,}8\times10^{-5}$ y lote de 128) que, evaluada con tráfico nuevo, redujo la probabilidad de bloqueo entre un 11\% y un 81\% respecto de SPFF y entre un 6\% y un 47\% respecto del agente por defecto, superando a ambos en todas las cargas y semillas evaluadas y con un entrenamiento cerca de tres veces más estable.
+
+El factor de descuento resultó el hiperparámetro clave: el valor por defecto de 0{,}99, habitual en otros problemas, hace que el agente considere un horizonte demasiado largo para un tráfico que llega de forma aleatoria. Con $\gamma = 0{,}80$, el agente aprendió a desviarse de la ruta más corta solo cuando la red se congestiona, lo que explica su ventaja sobre SPFF y sobre el agente por defecto.
+
+Estos resultados respaldan lo planteado por Doherty \textit{et al.}~\cite{doherty2025hype}: el desempeño de un agente DRL depende fuertemente de sus hiperparámetros, y ajustarlos de forma sistemática y evaluarlos con varias semillas es necesario para que la comparación con las heurísticas sea justa. Todo el trabajo se ejecutó en CPU, con cerca de 10 horas de cómputo en total, lo que muestra que esta optimización es accesible sin hardware especializado.
+
+
+% =====================================================================================
+% NO PEGAR ESTO EN EL .tex — va al final del archivo references.bib
+% (es la referencia de PED-ANOVA, que se cita en Resultados)
+% =====================================================================================
+
+@inproceedings{pedanova,
+  author    = {Watanabe, Shuhei and Bansal, Archit and Hutter, Frank},
+  title     = {{PED-ANOVA}: Efficiently Quantifying Hyperparameter Importance in Arbitrary Subspaces},
+  booktitle = {Proceedings of the Thirty-Second International Joint Conference on Artificial Intelligence (IJCAI)},
+  year      = {2023}
+}
+
+
+% =====================================================================================
+% OPCIONAL: figura de NSFNet para la Metodología.
+% Si la quieres, pégala en "Escenario de simulación", justo DESPUÉS del \end{table} de tab:escenario,
+% y agrega al final del primer párrafo de esa subsección:  La Fig.~\ref{fig:nsfnet} muestra la topología.
+% =====================================================================================
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{nsfnet.png}
+\caption{Topología NSFNet con el largo de cada enlace en km. Se destacan dos de las tres rutas candidatas entre los nodos 0 y 3: la más corta (2 saltos, 2090~km) y una alternativa (4 saltos, 4860~km).}
+\label{fig:nsfnet}
+\end{figure}

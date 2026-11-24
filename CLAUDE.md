@@ -1,7 +1,7 @@
 # Contexto del proyecto (para retomar en cualquier PC, con o sin Claude Code)
 
 Claude Code lee este archivo automáticamente al abrir el repo. También sirve como "estado del proyecto"
-para cualquier integrante del grupo. Última actualización: 2026-11-22.
+para cualquier integrante del grupo. Última actualización: 2026-11-24.
 
 ## Qué es
 
@@ -15,19 +15,16 @@ Proyecto del ramo **TEL 317 (USM, 2026)**. Integrantes: Andrea Alfonzo, Nicolás
 
 ## Estado al 24-11-2026  ⬅️ EMPEZAR AQUÍ
 
-- **Parte experimental: CERRADA.** No hace falta volver a entrenar nada.
-- **Presentación: miércoles 25-11-2026** (10 min) + **informe formato IEEE**. La pauta ya llegó:
-  `entregas/final/Pauta_Taller_Final_2026.pdf`. Secciones: portada (proyecto, nombre del equipo, integrantes),
-  problema, objetivos, metodología, demostración, resultados, autocrítica y trabajo futuro.
-- **Todo el material para armarlos está en `entregas/final/GUION_presentacion_e_informe.md`**: plan de 12
-  diapositivas con tiempos, qué decir en cada una, todos los números, autocrítica, preguntas probables con
-  respuesta, referencias, estado del informe y qué imagen va en cada página.
-- **Informe (Overleaf)**: hecho hasta Metodología (`entregas/final/informe_avance_hasta_metodologia.tex.txt`).
-  Faltan IV Demostración, V Resultados, VI Autocrítica y trabajo futuro, VII Conclusiones. Forma de trabajo:
-  Claude crea cada sección en un .txt, lo abre en el Bloc de notas, Nicolás copia/pega en Overleaf y avisa;
-  se borra y se abre el siguiente. Estructura = la de la pauta del Taller Final, no la del Taller 5.
-- **Pendiente decidir**: nombre del equipo para la portada; demo con video (recomendado) o ventana interactiva.
-- Mientras tanto existe un **informe de estudio** (no es la entrega): `informe/Informe_TEL317_Optuna_RMLSA.pdf`
+- **PROYECTO TERMINADO.** Parte experimental cerrada; informe y presentación finales listos para el
+  miércoles 25-11-2026 (10 min, se presenta desde Canva para que corra el video de la maqueta).
+- **Lo entregado está en `entregas/final/`**: `Informe_final_TEL317.pdf` (IEEE, 6 págs., 10 referencias)
+  y `Presentacion_final_TEL317.pdf` (Canva, 13 láminas), más `references.bib` y `figuras_informe/`.
+- **Para estudiar después: `entregas/final/README.md`** (qué leer y en qué orden, el proyecto en 10 ideas
+  y los detalles conocidos de lo entregado). Las preguntas probables con respuesta siguen en
+  `entregas/final/GUION_presentacion_e_informe.md`, sección 8.
+- El `.tex` vive en Overleaf (no está en el repo). Los textos que se pegaron en Overleaf y Canva quedaron
+  en `entregas/final/borradores/`.
+- También existe un **informe de estudio** (no es la entrega): `informe/Informe_TEL317_Optuna_RMLSA.pdf`
   (17 págs.). Explica todo para que el grupo entienda y pueda defender el trabajo: qué es RL/PPO,
   DREAM-ON GYM, Optuna (TPE, poda), escenario, semillas, resultados, limitaciones y 12 preguntas
   probables con respuesta. Se regenera con `python informe/informe_corto.py` y lee todos los números
@@ -164,6 +161,7 @@ siempre el nombre del estudio v4.
 | Ruta | Qué es |
 |---|---|
 | `entregas/Taller4/` | Propuesta (informe IEEE + presentación) entregada el 29-10 |
+| `entregas/final/` | Entrega final (informe + presentación), guion, pauta y guía de estudio (`README.md`) |
 | `informe/` | Informe de estudio (PDF) y el script que lo genera (`informe_corto.py`, `figuras.py`, `fig/`) |
 | `docs/Guia_DREAM-ON-GYM_y_Optuna.pdf` | Guía introductoria de DREAM-ON GYM y Optuna |
 | `docs/escenario.md`, `docs/instalacion.md` | Escenario de simulación e instalación |
@@ -181,8 +179,6 @@ siempre el nombre del estudio v4.
 
 ## Próximos pasos
 
-1. Terminar el informe IEEE: IV Demostración, V Resultados, VI Autocrítica y trabajo futuro, VII Conclusiones
-   (contenido y números en `entregas/final/GUION_presentacion_e_informe.md`).
-2. Armar la presentación del 25-11 (12 páginas, imágenes indicadas en el guion; video
-   `evidencias/2026-11-20_300trials/23_maqueta_150erl.mp4`).
-3. Definir nombre del equipo para la portada.
+1. Presentar el 25-11 (desde Canva, con el video).
+2. Después del ramo: (opcional) descargar el código de Overleaf a `entregas/final/latex/` y dejar el repo
+   público como portafolio.
