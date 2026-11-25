@@ -1,11 +1,4 @@
-"""Verifica que la instalación funciona de punta a punta (~1 min en CPU).
-
-1. Simula SPFF en NSFNet y reporta su probabilidad de bloqueo.
-2. Entrena PPO (Stable-Baselines3) unos pocos pasos.
-3. Corre un estudio Optuna mínimo (2 trials) sobre lr, gamma y batch_size.
-
-Uso:  python scripts/smoke_test.py
-"""
+"""Prueba rápida: SPFF, PPO y Optuna. Uso: python scripts/smoke_test.py"""
 
 import contextlib
 import io
@@ -40,7 +33,7 @@ def objective(trial):
 
 if __name__ == "__main__":
     t0 = time.time()
-    with contextlib.redirect_stdout(io.StringIO()):  # el simulador imprime ruido al iniciar
+    with contextlib.redirect_stdout(io.StringIO()):
         bp_spff = run_heuristic(spff, LOAD, seed=1000, n_requests=EVAL_REQUESTS)
         bp_ppo = evaluate_model(train(), LOAD, seed=1000, n_requests=EVAL_REQUESTS)
         optuna.logging.set_verbosity(optuna.logging.WARNING)

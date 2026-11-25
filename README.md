@@ -1,76 +1,70 @@
 # Optimización de hiperparámetros con Optuna para RMLSA con DRL
 
-Proyecto del curso **TEL 317** (USM, 2026) — Andrea Alfonzo, Nicolás Alvarez, Lorenzo Gonzalez.
+TEL-317 Redes Ópticas WDM (USM, 2026). Andrea Alfonzo, Nicolás Alvarez, Lorenzo Gonzalez.
 
-Un agente de aprendizaje por refuerzo profundo (PPO, Stable-Baselines3) resuelve el problema
-dinámico de ruteo, modulación y asignación de espectro (RMLSA) en redes ópticas elásticas sobre
-[DREAM-ON GYM](https://gitlab.com/IRO-Team/dream-on-gym-v2.0). Sus hiperparámetros (tasa de
-aprendizaje, factor de descuento, tamaño de lote) se ajustan con [Optuna](https://optuna.org)
-para minimizar la **probabilidad de bloqueo**, y se compara con el agente por defecto y con la
-heurística **SPFF** (Shortest-Path First-Fit).
+Agente PPO (Stable-Baselines3) que elige la ruta de cada solicitud en RMLSA dinámico sobre NSFNet,
+usando el simulador de [DREAM-ON GYM](https://gitlab.com/IRO-Team/dream-on-gym-v2.0). Con
+[Optuna](https://optuna.org) se ajustan learning rate, gamma y batch size para minimizar la
+probabilidad de bloqueo, y se compara contra PPO por defecto y SPFF.
 
-## Instalación (~2 min, ~700 MB)
+## Instalación
 
-Requisitos: Git y [uv](https://docs.astral.sh/uv/) (`winget install astral-sh.uv`). uv descarga
-Python 3.11 por su cuenta.
+Requiere Git y [uv](https://docs.astral.sh/uv/) (`winget install astral-sh.uv`).
 
 ```powershell
 git clone https://github.com/niccolvs/rmlsa-optuna-drl.git
 cd rmlsa-optuna-drl
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1   # Linux/macOS: bash scripts/setup.sh
 .venv\Scripts\Activate.ps1
-python scripts\smoke_test.py                                  # SPFF + PPO + Optuna en ~1-2 min
+python scripts\smoke_test.py
 ```
 
-No hace falta CUDA, TensorFlow, MPI ni Visual Studio Build Tools aunque el README de DREAM-ON GYM
-los pida: ver [docs/instalacion.md](docs/instalacion.md).
+No hace falta CUDA, TensorFlow ni MPI. Detalles en [docs/instalacion.md](docs/instalacion.md).
 
-## Estado y contexto
+## Uso
 
-Todo lo necesario para retomar el proyecto (estado, resultados finales, decisiones, pendientes y cómo
-seguir en otro PC) está en [CLAUDE.md](CLAUDE.md).
+```powershell
+python scripts\baseline_spff.py                                                   # bloqueo de SPFF
+python scripts\train_ppo.py                                                       # PPO por defecto
+python scripts\optuna_ppo.py --study-name ppo_rmlsa_100erl_v4 --n-trials 300      # estudio Optuna (~8 h)
+python scripts\evaluar_final.py --study-name ppo_rmlsa_100erl_v4                  # defecto vs Optuna vs SPFF
+python scripts\analisis_red.py --run ppo_rmlsa_100erl_v4                          # gráficos de la red
+python scripts\maqueta_red.py                                                     # maqueta en vivo
+python scripts\maqueta_red.py --video results\maqueta.mp4 --carga 150             # maqueta en video
+```
+
+`results/` ya trae el estudio final (base de Optuna, gráficos y los 6 modelos), así que la maqueta y
+los gráficos se pueden correr sin volver a entrenar.
+
+## Resultados
+
+300 trials (90 completos, 210 podados). Mejor configuración: gamma 0.80, learning rate 1.8e-5,
+batch size 128 (por defecto: 0.99, 3e-4, 64).
+
+Evaluado con 10 cargas (25 a 250 Erlang) y 10 semillas de tráfico nuevas, PPO Optuna bloquea entre
+11 % y 81 % menos que SPFF y entre 6 % y 47 % menos que PPO por defecto.
+
+| Erlang | SPFF | PPO defecto | PPO Optuna |
+|---|---|---|---|
+| 25 | 0.0107 | 0.0038 | 0.0020 |
+| 100 | 0.0985 | 0.0891 | 0.0798 |
+| 250 | 0.2057 | 0.1955 | 0.1821 |
+
+Capturas y datos de cada etapa en [evidencias/](evidencias/README.md). Informe y presentación en `entregas/`.
 
 ## Estructura
 
 ```
-data/
-  topologies/     NSFNet (14 nodos, 42 enlaces, 100 slots) y sus 3 rutas candidatas por par
-  bitrates/       10/40/100/400 Gbps con BPSK…64-QAM (slots y alcance, tablas de Flex Net Sim)
-src/rmlsa/
-  env.py          RMLSAEnv (Gymnasium): acción = ruta, modulación por alcance, espectro First-Fit
-  heuristics.py   allocators: first_fit (ruta del agente) y spff
-scripts/
-  setup.ps1/.sh             instalación
-  smoke_test.py             prueba de punta a punta (~30 s)
-  baseline_spff.py          bloqueo de SPFF por carga y semilla (+ gráfico)
-  train_ppo.py              entrena PPO con hiperparámetros por defecto (+ TensorBoard)
-  optuna_ppo.py             estudio Optuna (learning rate, gamma, batch size)
-  evaluar_final.py          PPO defecto vs PPO Optuna vs SPFF (cargas y semillas, IC 95 %, uso de la red)
-  analisis_red.py           curvas de aprendizaje, rutas, bloqueo por velocidad/distancia, mapa de ocupación
-  maqueta_red.py            NSFNet en vivo (SPFF vs PPO): ventana interactiva o video MP4
-docs/             notas (instalación, escenario) y guía de DREAM-ON GYM y Optuna
-evidencias/       capturas y videos de los experimentos (versionado)
-informe/          informe de estudio en PDF y el script que lo genera
-entregas/         propuesta del Taller 4 y entrega final (informe IEEE, presentación y guía de estudio)
-results/          modelos, estudios Optuna y logs (solo se versiona el estudio final v4)
+data/        NSFNet, rutas candidatas y bitrates
+src/rmlsa/   entorno Gymnasium (env.py) y heurísticas (heuristics.py)
+scripts/     instalación, SPFF, PPO, Optuna, evaluación, análisis y maqueta
+docs/        instalación y escenario de simulación
+evidencias/  capturas, videos y CSV de los experimentos
+results/     estudio final (Optuna, evaluación y modelos)
+entregas/    Taller 4 y entrega final
 ```
-
-## Plan de trabajo
-
-- [x] Entorno instalable y estructura del repositorio
-- [x] Escenario y agente base: observación (par, bitrate y estado del espectro en las k rutas), episodios de 1000 solicitudes
-- [x] Baseline SPFF (4 cargas × 5 semillas) y PPO por defecto (ver `evidencias/`)
-- [x] Estudio Optuna (TPE + pruning, SQLite): `scripts/optuna_ppo.py`, 30 trials (ver `evidencias/`)
-- [x] Estudio Optuna v2: 40 trials, 100 000 pasos, evaluación con 10 000 solicitudes (mejor: gamma 0.83, lr 4.1e-5, batch 256)
-- [x] Evaluación final (`scripts/evaluar_final.py`): 3 entrenamientos × 4 cargas × 5 semillas de tráfico; PPO Optuna bloquea 12–48 % menos que SPFF
-- [x] Estudio Optuna v3: 100 trials, 200 000 pasos, cada trial medido con 3 semillas de tráfico (mejor: gamma 0.836, lr 2.2e-5, batch 64)
-- [x] Evaluación ampliada: 3 entrenamientos × 10 cargas (25–250 Erlang) × 10 semillas, IC 95 %; PPO Optuna bloquea 10–78 % menos que SPFF y 5–39 % menos que PPO por defecto, en las 100 combinaciones carga × semilla
-- [x] Análisis de la red (`scripts/analisis_red.py`): rutas elegidas, bloqueo por velocidad y distancia, ocupación por enlace
-- [x] Maqueta en vivo (`scripts/maqueta_red.py`): SPFF vs PPO sobre el mapa de EE. UU., ventana interactiva o video
-- [x] Estudio final: v3 extendido a 300 trials (mejor: gamma 0.800, lr 1.8e-5, batch 128; bloqueo 0.0753) y evaluación repetida: PPO Optuna bloquea 11–81 % menos que SPFF y 6–47 % menos que PPO por defecto
-- [x] Entrega final (25-11-2026): informe IEEE y presentación en [`entregas/final/`](entregas/final/README.md)
 
 ## Créditos
 
-Topología, rutas y bitrates en `data/` provienen de DREAM-ON GYM v2 (N. Jara, H. Pempelfort et al.,
-SIMULTECH 2024), distribuido bajo GPL-3.0.
+Topología, rutas y bitrates de `data/` vienen de DREAM-ON GYM v2 (N. Jara, H. Pempelfort et al.,
+SIMULTECH 2024), licencia GPL-3.0.

@@ -1,11 +1,4 @@
-"""Probabilidad de bloqueo de SPFF bajo distintas cargas y semillas.
-
-Uso:
-    python scripts/baseline_spff.py
-    python scripts/baseline_spff.py --loads 50 100 150 200 --seeds 0 1 2 3 4
-
-Guarda results/baseline_spff.csv y results/baseline_spff.png.
-"""
+"""Bloqueo de SPFF por carga y semilla. Uso: python scripts/baseline_spff.py"""
 
 import argparse
 import contextlib
@@ -31,7 +24,7 @@ def main():
     rows = []
     for load in args.loads:
         for seed in args.seeds:
-            with contextlib.redirect_stdout(io.StringIO()):  # el simulador imprime ruido
+            with contextlib.redirect_stdout(io.StringIO()):
                 bp = run_heuristic(spff, load, seed, args.requests)
             rows.append({"carga_erlang": load, "semilla": seed, "bloqueo": bp})
             print(f"SPFF  carga={load:>5.0f} Erl  semilla={seed}  bloqueo={bp:.4f}")

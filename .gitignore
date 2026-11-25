@@ -3,10 +3,10 @@
 __pycache__/
 *.egg-info/
 
-# DREAM-ON GYM clonado por scripts/setup.*
+# DREAM-ON GYM
 external/
 
-# Salidas de experimentos (modelos, logs, estudios Optuna)
+# Resultados
 results/*
 !results/.gitkeep
 *.zip
@@ -19,8 +19,7 @@ tb_logs/
 .vscode/
 .idea/
 
-# Excepción: copia del estudio final (300 trials) para retomar en otro PC sin re-entrenar (~10 h).
-# Base Optuna, gráficos y datos de la evaluación, y los 6 modelos finales (los usa la maqueta).
+# Estudio final (para no re-entrenar)
 !results/optuna.db
 !results/optuna/
 results/optuna/*

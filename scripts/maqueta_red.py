@@ -1,15 +1,7 @@
-"""Maqueta de NSFNet operando en vivo: SPFF y un agente PPO atienden la MISMA secuencia de solicitudes.
+"""Maqueta de NSFNet en vivo, SPFF vs PPO.
 
-Cada enlace se colorea según su ocupación de espectro. En cada cuadro se dibujan las solicitudes
-bloqueadas (rojo) y las que el agente aceptó desviándolas por una ruta alternativa (celeste).
-Abajo, la probabilidad de bloqueo acumulada de ambos.
-
-Modo interactivo (ventana con controles: carga, velocidad, agente, pausa, reiniciar):
-    python scripts/maqueta_red.py
-
-Modo video (MP4 para la presentación):
-    python scripts/maqueta_red.py --video results/maqueta_150erl.mp4 --carga 150
-"""
+Uso: python scripts/maqueta_red.py  (ventana)
+     python scripts/maqueta_red.py --video results/maqueta.mp4 --carga 150"""
 
 import argparse
 import contextlib
@@ -24,18 +16,16 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 MODELS = ROOT / "results" / "models" / "final"
 COLORS = {"SPFF": "#1f77b4", "PPO Optuna": "#2ca02c", "PPO defecto": "#ff7f0e"}
-# Ciudades reales de NSFNet (los largos de los enlaces de la topología coinciden con estas distancias)
 CITIES = {0: ("Seattle", 47.61, -122.33), 1: ("Palo Alto", 37.44, -122.14), 2: ("San Diego", 32.72, -117.16),
           3: ("Salt Lake City", 40.76, -111.89), 4: ("Boulder", 40.01, -105.27), 5: ("Houston", 29.76, -95.37),
           6: ("Lincoln", 40.81, -96.70), 7: ("Champaign", 40.12, -88.24), 8: ("Pittsburgh", 40.44, -79.99),
           9: ("Atlanta", 33.75, -84.39), 10: ("Ann Arbor", 42.28, -83.74), 11: ("Ithaca", 42.44, -76.50),
           12: ("Princeton", 40.36, -74.66), 13: ("College Park", 38.99, -76.94)}
-KX = np.cos(np.radians(38))  # proyección simple: longitud escalada por el coseno de una latitud media
+KX = np.cos(np.radians(38))
 POS = {n: (lon * KX, lat) for n, (_, lat, lon) in CITIES.items()}
 
 
 def draw_usa(ax):
-    """Estados de EE. UU. continental de fondo (data/mapas/us_states.json, datos del censo de EE. UU.)."""
     from matplotlib.collections import PolyCollection
 
     polys = []
@@ -55,14 +45,12 @@ BLOCKED, DETOUR = "#d00000", "#00b4d8"
 
 
 class Agente:
-    """Un simulador con su política. Ambos agentes usan la misma semilla de tráfico."""
-
     def __init__(self, name, load, seed, model=None):
         from rmlsa.env import RMLSAEnv
         from rmlsa.heuristics import first_fit, spff
 
         self.name, self.model = name, model
-        with contextlib.redirect_stdout(io.StringIO()):  # el simulador imprime ruido
+        with contextlib.redirect_stdout(io.StringIO()):
             self.env = RMLSAEnv(load=load, seed=seed, episode_length=10**9,
                                 allocator=first_fit if model else spff)
             self.obs, _ = self.env.reset()
@@ -72,7 +60,6 @@ class Agente:
         self.n = self.blocked = self.detours = 0
 
     def step(self):
-        """Atiende una solicitud. Retorna (ruta usada, asignada, k)."""
         src, dst, _ = self.env._request
         routes = self.env.sim.controller.path[src][dst]
         action = 0 if self.model is None else int(self.model.predict(self.obs, deterministic=True)[0])
@@ -112,13 +99,11 @@ class Maqueta:
         self.models, self.seed, self.per_frame = models, seed, per_frame
         self.fig = fig
         topo = json.load(open(ROOT / "data" / "topologies" / "NSFNet.json"))
-        # un segmento por par de nodos (los dos sentidos del enlace se promedian)
         self.pairs = sorted({(min(l["src"], l["dst"]), max(l["src"], l["dst"])) for l in topo["links"]})
         self.link_pair = {l["id"]: self.pairs.index((min(l["src"], l["dst"]), max(l["src"], l["dst"])))
                           for l in topo["links"]}
         segs = [[POS[a], POS[b]] for a, b in self.pairs]
 
-        # ocupación en grises (más oscuro = más lleno) para que resalten los eventos en rojo y celeste
         cmap = ListedColormap(plt.get_cmap("Greys")(np.linspace(0.3, 0.9, 256)))
         self.axes, self.base, self.events = [], [], []
         for x0 in (0.01, 0.47):
@@ -150,7 +135,7 @@ class Maqueta:
     def restart(self, load, right):
         self.load, self.right = load, right
         self.agents = [Agente("SPFF", load, self.seed), Agente(right, load, self.seed, self.models[right])]
-        self.history = [[], [], []]  # solicitudes, bloqueo SPFF, bloqueo derecha
+        self.history = [[], [], []]
         ax = self.ax_curve
         ax.clear()
         for i, a in enumerate(self.agents):
@@ -218,7 +203,7 @@ def interactive(args, models):
     b_reset = Button(fig.add_axes([0.82, 0.035, 0.10, 0.05]), "Reiniciar")
 
     def ask_restart(_=None):
-        state["restart"] = True  # se reinicia en el próximo cuadro, no dentro del callback
+        state["restart"] = True
 
     def set_speed(v):
         m.per_frame = int(v)
@@ -242,7 +227,7 @@ def interactive(args, models):
         return []
 
     anim = FuncAnimation(fig, frame, interval=40, cache_frame_data=False)
-    fig._anim = anim  # mantener la referencia viva
+    fig._anim = anim
     plt.show()
 
 

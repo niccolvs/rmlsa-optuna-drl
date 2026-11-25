@@ -3,8 +3,6 @@ name = "rmlsa-optuna-drl"
 version = "0.1.0"
 description = "Optimización de hiperparámetros con Optuna de un agente DRL (PPO) para RMLSA dinámico en redes ópticas elásticas, sobre DREAM-ON GYM."
 requires-python = ">=3.10,<3.13"
-# DREAM-ON GYM se instala aparte con --no-deps (ver scripts/setup.ps1):
-# su setup.py exige tensorflow==2.15 y mpi4py, que el código no usa.
 dependencies = [
     "torch>=2.3",
     "stable-baselines3>=2.3",
@@ -16,12 +14,8 @@ dependencies = [
     "jsonschema",
     "matplotlib",
     "tensorboard",
-    "imageio-ffmpeg",  # ffmpeg para el video de scripts/maqueta_red.py
+    "imageio-ffmpeg",
 ]
-
-[project.optional-dependencies]
-# Solo para generar el informe PDF de estudio (informe/informe_corto.py)
-informe = ["reportlab"]
 
 [build-system]
 requires = ["setuptools>=68"]

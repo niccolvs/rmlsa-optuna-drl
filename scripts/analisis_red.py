@@ -1,15 +1,4 @@
-"""Gráficos del análisis de la red a partir de lo que guardó evaluar_final.py.
-
-    curvas_aprendizaje.png   bloqueo por episodio durante el entrenamiento (media y rango de las semillas)
-    uso_rutas.png            % de solicitudes enviadas por una ruta que no es la más corta, según la carga
-    bloqueo_por_bitrate.png  bloqueo de cada velocidad (10/40/100/400 Gbps) a la carga indicada
-    bloqueo_por_distancia.png  bloqueo según el largo de la ruta más corta del par origen-destino
-    mapa_ocupacion.png       NSFNet coloreada por ocupación media de cada enlace: SPFF vs PPO Optuna
-
-Uso:
-    python scripts/analisis_red.py
-    python scripts/analisis_red.py --run ppo_rmlsa_100erl_v3 --carga 100
-"""
+"""Gráficos del análisis de la red. Uso: python scripts/analisis_red.py --run ppo_rmlsa_100erl_v4"""
 
 import argparse
 import json
@@ -24,7 +13,6 @@ from matplotlib.collections import LineCollection
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ["SPFF", "PPO defecto", "PPO Optuna"]
 COLORS = {"SPFF": "#1f77b4", "PPO defecto": "#ff7f0e", "PPO Optuna": "#2ca02c"}
-# Nodos en sus ciudades reales y mapa de EE. UU. de fondo (mismo estilo que la maqueta)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from maqueta_red import POS, draw_usa  # noqa: E402
 
@@ -110,7 +98,7 @@ def occupancy_map(out, load):
     ends = {l["id"]: (l["src"], l["dst"]) for l in topo["links"]}
     d = pd.read_csv(out / "red_enlaces.csv")
     d = d[d["carga_erlang"] == load]
-    occ = d.groupby(["agente", "clave"])["solicitudes"].mean()  # columna 'solicitudes' = ocupación media
+    occ = d.groupby(["agente", "clave"])["solicitudes"].mean()
     fig, axes = plt.subplots(1, 2, figsize=(12, 3.6))
     vmax = occ.max()
     for ax, name in zip(axes, ["SPFF", "PPO Optuna"]):

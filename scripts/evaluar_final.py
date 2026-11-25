@@ -1,23 +1,4 @@
-"""Comparación final (objetivo 4): PPO por defecto vs PPO optimizado vs SPFF.
-
-1. Entrena PPO con hiperparámetros por defecto y con los mejores del estudio Optuna,
-   cada uno con varias semillas de entrenamiento (el RL varía de una corrida a otra).
-   Guarda la curva de aprendizaje (bloqueo de cada episodio) de cada entrenamiento.
-2. Evalúa cada agente y SPFF con varias cargas y semillas de tráfico de prueba, distintas
-   de las usadas por Optuna (1000-1002), para no medir sobre el mismo tráfico con que se eligió.
-   Además registra cómo usa la red cada agente: rutas elegidas, bloqueo por bitrate y por
-   distancia, y ocupación de cada enlace.
-
-Los modelos ya entrenados se reutilizan: si se corta, al relanzar sigue donde quedó.
-
-Uso:
-    python scripts/evaluar_final.py
-    python scripts/evaluar_final.py --study-name ppo_rmlsa_100erl_v3 --timesteps 1000000 --tag largo
-
-Guarda en results/final/<study-name>[_<tag>]/: resultados.csv, resumen.csv, red_*.csv, curvas/*.csv
-y los gráficos bloqueo_vs_carga.png y mejora_vs_carga.png. Los gráficos del análisis de la red
-los genera scripts/analisis_red.py.
-"""
+"""PPO defecto vs PPO Optuna vs SPFF. Uso: python scripts/evaluar_final.py --study-name ppo_rmlsa_100erl_v4"""
 
 import argparse
 import contextlib
@@ -35,9 +16,9 @@ from stable_baselines3.common.callbacks import BaseCallback
 from rmlsa.env import RMLSAEnv, evaluate_detailed
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
-TRAIN_LOAD = 100  # carga con la que se entrenan los agentes y se corrió Optuna
+TRAIN_LOAD = 100
 AGENTS = ["SPFF", "PPO defecto", "PPO Optuna"]
-# t de Student al 97.5 % según grados de libertad, para intervalos de confianza del 95 %
+# t de Student, IC 95 %
 T975 = {1: 12.71, 2: 4.30, 3: 3.18, 4: 2.78, 5: 2.57, 6: 2.45, 7: 2.36, 8: 2.31, 9: 2.26, 10: 2.23,
         14: 2.14, 19: 2.09, 29: 2.05}
 
@@ -47,8 +28,6 @@ def t975(dof):
 
 
 class CurveLogger(BaseCallback):
-    """Guarda (paso, bloqueo del episodio) de cada episodio de entrenamiento."""
-
     def __init__(self):
         super().__init__()
         self.rows = []
@@ -66,7 +45,7 @@ def train(slug, hyperparams, seed, timesteps, models_dir, curves_dir):
         print(f"  {path.stem}: ya entrenado, se reutiliza")
         return PPO.load(path)
     t0 = time.time()
-    with contextlib.redirect_stdout(io.StringIO()):  # el simulador imprime ruido
+    with contextlib.redirect_stdout(io.StringIO()):
         env = RMLSAEnv(load=TRAIN_LOAD, seed=seed)
         env.reset()
     model = PPO("MlpPolicy", env, seed=seed, verbose=0,
@@ -76,13 +55,12 @@ def train(slug, hyperparams, seed, timesteps, models_dir, curves_dir):
     models_dir.mkdir(parents=True, exist_ok=True)
     curves_dir.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(logger.rows, columns=["paso", "bloqueo"]).to_csv(curves_dir / f"{slug}_s{seed}.csv", index=False)
-    model.save(path)  # al final: si se corta a medias, se vuelve a entrenar completo
+    model.save(path)
     print(f"  {path.stem}: entrenado en {(time.time() - t0) / 60:.1f} min")
     return model
 
 
 def summarize(df):
-    """Por agente y carga: promedio sobre entrenamientos, luego media e IC 95 % sobre semillas de tráfico."""
     per_seed = df.groupby(["agente", "carga_erlang", "semilla_trafico"])["bloqueo"].mean().reset_index()
     g = per_seed.groupby(["agente", "carga_erlang"])["bloqueo"]
     summary = g.agg(["mean", "std", "count"]).reset_index()
@@ -91,7 +69,6 @@ def summarize(df):
 
 
 def improvement(per_seed, a, b):
-    """Mejora porcentual de a respecto de b por carga, con IC 95 % (pareado por semilla de tráfico)."""
     p = per_seed.pivot_table(index=["carga_erlang", "semilla_trafico"], columns="agente", values="bloqueo")
     imp = ((1 - p[a] / p[b]) * 100).groupby(level=0)
     out = imp.agg(["mean", "std", "count"])

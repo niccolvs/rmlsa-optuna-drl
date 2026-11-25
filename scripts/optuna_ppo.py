@@ -1,18 +1,6 @@
-"""Optimiza learning_rate, gamma y batch_size de PPO con Optuna (TPE + MedianPruner).
+"""Optuna (TPE + MedianPruner) sobre learning_rate, gamma y batch_size de PPO.
 
-Cada trial entrena un PPO por etapas y, al final de cada etapa, mide su probabilidad de
-bloqueo (promedio sobre las semillas de tráfico de --eval-seeds). Si va peor que la mediana
-de los trials anteriores en esa misma etapa, se poda.
-El estudio se guarda en results/optuna.db: si se corta (Ctrl + C), al relanzar el mismo
-comando continúa donde quedó.
-
-Uso:
-    python scripts/optuna_ppo.py
-    python scripts/optuna_ppo.py --n-trials 40 --timesteps 100000 --eval-seeds 1000 --study-name ppo_rmlsa_100erl_v2
-
-Al terminar guarda en results/optuna/<study-name>/: trials.csv y los gráficos de Optuna (historial,
-importancia, slice, coordenadas paralelas, valores intermedios) más gamma vs learning rate.
-"""
+Uso: python scripts/optuna_ppo.py --study-name ppo_rmlsa_100erl_v4 --n-trials 300"""
 
 import argparse
 import contextlib
@@ -37,15 +25,15 @@ def make_objective(args):
             "gamma": trial.suggest_float("gamma", 0.8, 0.9999),
             "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512]),
         }
-        with contextlib.redirect_stdout(io.StringIO()):  # el simulador imprime ruido
+        with contextlib.redirect_stdout(io.StringIO()):
             env = RMLSAEnv(load=args.load, seed=0)
-            env.reset()  # construye el simulador (warm-up) aquí y no dentro de learn()
+            env.reset()
             model = PPO("MlpPolicy", env, seed=0, verbose=0, **hyperparams)
 
         steps_per_stage = args.timesteps // args.stages
         for stage in range(args.stages):
             model.learn(steps_per_stage, reset_num_timesteps=False)
-            with contextlib.redirect_stdout(io.StringIO()):  # tráfico distinto al de entrenamiento (semilla 0)
+            with contextlib.redirect_stdout(io.StringIO()):
                 blocking = sum(evaluate_model(model, args.load, s, args.eval_requests)
                                for s in args.eval_seeds) / len(args.eval_seeds)
             trial.report(blocking, stage)
@@ -68,7 +56,6 @@ def print_trial(study, trial):
 
 
 def plot_gamma_lr(study, path):
-    """Dónde probó TPE en el plano gamma-learning rate, coloreado por bloqueo (podados con X)."""
     done = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
     pruned = [t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED]
     fig, ax = plt.subplots(figsize=(6.5, 4.4))
@@ -105,7 +92,7 @@ def save_plots(study, out):
     vis.plot_intermediate_values(study)
     legend = plt.gca().get_legend()
     if legend:
-        legend.remove()  # una entrada por trial: ilegible
+        legend.remove()
     plt.savefig(out / "valores_intermedios.png", dpi=150, bbox_inches="tight")
     plot_gamma_lr(study, out / "gamma_vs_learning_rate.png")
     plt.close("all")
@@ -149,7 +136,6 @@ def main():
         print(f"Gráficos en {out}")
         return
 
-    # solo cuentan los trials terminados de verdad: uno cortado con Ctrl + C queda como FAIL y se repite
     done = len([t for t in study.trials
                 if t.state in (optuna.trial.TrialState.COMPLETE, optuna.trial.TrialState.PRUNED)])
     remaining = max(0, args.n_trials - done)

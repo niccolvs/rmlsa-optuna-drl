@@ -1,13 +1,4 @@
-"""Algoritmos de asignación (allocators) con la firma que espera DREAM-ON GYM.
-
-Firma: (src, dst, b, c, n, path, action) -> (Controller.Status, Connection)
-    src, dst: nodos origen/destino.
-    b: BitRate de la solicitud (lista de modulaciones con slots y alcance).
-    c: Connection a la que se le agregan los enlaces/slots.
-    n: Network (estado del espectro).
-    path: path[src][dst] = lista de k rutas candidatas (listas de Link).
-    action: decisión del agente (None durante el warm-up o en la heurística).
-"""
+"""Allocators para DREAM-ON GYM: (src, dst, b, c, n, path, action) -> (status, connection)."""
 
 from dreamongymv2.simNetPy import Controller
 
@@ -17,12 +8,6 @@ def path_length(route):
 
 
 def modulation_slots(b, length):
-    """Slots de la modulación más eficiente cuyo alcance cubre la ruta.
-
-    Se asume que el archivo de bitrates lista las modulaciones de menor a
-    mayor eficiencia (BPSK, QPSK, 8-QAM, 16-QAM), así que se recorre al revés.
-    Retorna None si ninguna modulación alcanza.
-    """
     for i in reversed(range(len(b.modulation))):
         if b.getReach(i) >= length:
             return b.getNumberofSlots(i)
@@ -30,7 +15,6 @@ def modulation_slots(b, length):
 
 
 def used_slots(route, n):
-    """Slot s está ocupado en la ruta si lo está en cualquiera de sus enlaces."""
     total_slots = n.getLink(0).getSlots()
     used = [False] * total_slots
     for link in route:
@@ -41,7 +25,6 @@ def used_slots(route, n):
 
 
 def first_fit_start(used, slots_needed):
-    """Índice del primer bloque contiguo libre de tamaño slots_needed, o None."""
     run, start = 0, 0
     for s, busy in enumerate(used):
         if busy:
@@ -66,7 +49,6 @@ def _allocate_on_route(route, b, c, n):
 
 
 def first_fit(src, dst, b, c, n, path, action):
-    """Ruta elegida por el agente (o la más corta si no hay acción) + First-Fit."""
     routes = path[src][dst]
     k = 0 if action is None else min(int(action), len(routes) - 1)
     if _allocate_on_route(routes[k], b, c, n):
@@ -75,10 +57,6 @@ def first_fit(src, dst, b, c, n, path, action):
 
 
 def spff(src, dst, b, c, n, path, action):
-    """Shortest-Path First-Fit: ignora al agente, siempre usa la ruta 0.
-
-    NSFNet_routes.json ordena las rutas de menor a mayor número de saltos.
-    """
     if _allocate_on_route(path[src][dst][0], b, c, n):
         return Controller.Status.Allocated, c
     return Controller.Status.Not_Allocated, c

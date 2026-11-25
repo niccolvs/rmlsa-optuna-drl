@@ -1,15 +1,4 @@
-"""Entrena un agente PPO con los hiperparámetros POR DEFECTO de Stable-Baselines3.
-
-Uso:
-    python scripts/train_ppo.py
-    python scripts/train_ppo.py --load 100 --timesteps 200000 --seed 0 --name ppo_default
-
-Durante el entrenamiento se registran en TensorBoard (results/tensorboard):
-    rmlsa/bloqueo_episodio   probabilidad de bloqueo de cada episodio (1000 solicitudes)
-    rollout/ep_rew_mean      recompensa media (+1 asignada, -1 bloqueada)
-    train/*                  pérdidas y métricas internas de PPO
-Al final guarda el modelo en results/models/<name>.zip y lo compara con SPFF.
-"""
+"""PPO con hiperparámetros por defecto. Uso: python scripts/train_ppo.py --load 100 --timesteps 200000"""
 
 import argparse
 import contextlib
@@ -24,12 +13,10 @@ from rmlsa.env import RMLSAEnv, evaluate_model, run_heuristic
 from rmlsa.heuristics import spff
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
-EVAL_SEED = 1000  # semilla de tráfico distinta a la de entrenamiento
+EVAL_SEED = 1000
 
 
 class BlockingLogger(BaseCallback):
-    """Registra la probabilidad de bloqueo de cada episodio en TensorBoard."""
-
     def _on_step(self):
         for info in self.locals["infos"]:
             if "blocking_probability" in info:
@@ -46,7 +33,7 @@ def main():
     parser.add_argument("--eval-requests", type=int, default=10_000)
     args = parser.parse_args()
 
-    with contextlib.redirect_stdout(io.StringIO()):  # el simulador imprime ruido al iniciar
+    with contextlib.redirect_stdout(io.StringIO()):
         env = RMLSAEnv(load=args.load, seed=args.seed)
         env.reset()
 

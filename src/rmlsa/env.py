@@ -1,18 +1,4 @@
-"""Entorno Gymnasium para RMLSA dinámico sobre el simulador de DREAM-ON GYM.
-
-Se usa directamente ``dreamongymv2.simNetPy.Simulator`` en vez de su
-``RlOnEnv``: este último depende de ``simulator_finite``, que está roto en la
-versión 0.0.9 (TypeError al crear eventos), y además entrega una observación
-constante, con la que el agente no puede aprender nada.
-
-Cada paso = una solicitud de conexión que llega a la red.
-    Acción: índice de la ruta candidata (0..K-1). La modulación es la más
-        eficiente que alcanza la distancia y el espectro se asigna con
-        First-Fit, así que el agente decide la parte de "R" de RMLSA.
-    Recompensa: +1 si la conexión se asigna, -1 si se bloquea.
-    Episodio: ``episode_length`` solicitudes. El tráfico continúa entre
-        episodios (la red no se vacía al hacer reset).
-"""
+"""Entorno Gymnasium para RMLSA sobre el simulador de DREAM-ON GYM."""
 
 from pathlib import Path
 
@@ -33,22 +19,11 @@ TOPOLOGY = DATA_DIR / "topologies" / "NSFNet.json"
 ROUTES = DATA_DIR / "topologies" / "NSFNet_routes.json"
 BITRATES = DATA_DIR / "bitrates" / "bitrates_nsfnet.json"
 
-K_PATHS = 3  # NSFNet_routes.json trae 3 rutas candidatas por par origen-destino
+K_PATHS = 3  # 3 rutas por par
 FEATURES_PER_PATH = 5
 
 
 class RMLSAEnv(gymnasium.Env):
-    """RMLSA dinámico: llegadas Poisson, tiempos de retención exponenciales.
-
-    Args:
-        load: carga de tráfico en Erlang (= lambda / mu, con mu = 1).
-        seed: semilla base del tráfico (llegadas, salidas, pares y bitrates).
-        episode_length: solicitudes por episodio.
-        warmup: solicitudes atendidas con SPFF antes de que actúe el agente,
-            para que la red parta "cargada" y no vacía.
-        allocator: función de asignación; por defecto, ruta del agente + FF.
-    """
-
     def __init__(self, load=300.0, seed=0, episode_length=1000, warmup=3000, allocator=first_fit):
         super().__init__()
         self.load = load
@@ -59,13 +34,11 @@ class RMLSAEnv(gymnasium.Env):
         self.sim = None
 
         self.action_space = gymnasium.spaces.Discrete(K_PATHS)
-        # nodo origen (one-hot) + destino (one-hot) + bitrate (one-hot) + features por ruta
+        # origen + destino + bitrate + features por ruta
         self._n_nodes = 14
         self._n_bitrates = 4
         size = 2 * self._n_nodes + self._n_bitrates + K_PATHS * FEATURES_PER_PATH
         self.observation_space = gymnasium.spaces.Box(-1.0, 1.0, shape=(size,), dtype=np.float32)
-
-    # --- simulador -----------------------------------------------------------
 
     def _build_simulator(self):
         sim = Simulator(str(TOPOLOGY), str(ROUTES), str(BITRATES))
@@ -80,17 +53,15 @@ class RMLSAEnv(gymnasium.Env):
         sim.setAllocator(self.allocator)
         sim.setGoalConnections(self.warmup)
         sim.init()
-        sim.run()  # warm-up sin agente (action=None -> ruta más corta)
+        sim.run()  # warm-up con SPFF
         sim.forwardDepartures()
-        sim.createEventConnection()  # primera solicitud que verá el agente
+        sim.createEventConnection()
         return sim
 
     @property
     def _request(self):
         ev = self.sim.connectionEvent
         return ev.source, ev.destination, ev.bitRate
-
-    # --- observación ---------------------------------------------------------
 
     def _observation(self):
         src, dst, br = self._request
@@ -115,8 +86,6 @@ class RMLSAEnv(gymnasium.Env):
             obs[f + 3] = -1.0 if start is None else start / total_slots  # posición FF
             obs[f + 4] = 0.0 if start is None else 1.0               # ¿cabe?
         return obs
-
-    # --- API Gymnasium -------------------------------------------------------
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -143,7 +112,6 @@ class RMLSAEnv(gymnasium.Env):
 
 
 def run_heuristic(allocator, load, seed, n_requests):
-    """Probabilidad de bloqueo de una heurística sobre n_requests solicitudes."""
     env = RMLSAEnv(load=load, seed=seed, episode_length=n_requests, allocator=allocator)
     env.reset()
     info = {}
@@ -153,7 +121,6 @@ def run_heuristic(allocator, load, seed, n_requests):
 
 
 def evaluate_model(model, load, seed, n_requests):
-    """Probabilidad de bloqueo de un agente SB3 (política determinista)."""
     env = RMLSAEnv(load=load, seed=seed, episode_length=n_requests)
     obs, info = env.reset()
     while "blocking_probability" not in info:
@@ -163,15 +130,7 @@ def evaluate_model(model, load, seed, n_requests):
 
 
 def evaluate_detailed(load, seed, n_requests, model=None, sample_every=100):
-    """Como evaluate_model (o SPFF si model es None), pero registrando cómo se usa la red.
-
-    Retorna un dict con:
-        bloqueo: probabilidad de bloqueo.
-        rutas: {k: veces que se eligió la ruta candidata k}.
-        bitrate: {Gbps: (solicitudes, bloqueadas)}.
-        distancia: {km de la ruta más corta del par: (solicitudes, bloqueadas)}.
-        enlaces: {id de enlace: fracción media de slots ocupados}, muestreada cada sample_every solicitudes.
-    """
+    """Retorna bloqueo, rutas, bitrate, distancia y ocupación de enlaces."""
     from rmlsa.heuristics import spff
 
     env = RMLSAEnv(load=load, seed=seed, episode_length=n_requests, allocator=first_fit if model else spff)
